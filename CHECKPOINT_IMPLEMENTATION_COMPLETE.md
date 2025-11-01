@@ -351,7 +351,7 @@ GROUP BY u.id;
 
 1. **Access the checkpoint interface:**
    ```
-   https://alpefresh.app/asistencia/asistencias_checkpoint.php
+   https://asistencia.alpefresh.app/asistencias_checkpoint.php
    ```
 
 2. **Include dashboard widget:**

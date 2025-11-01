@@ -8,7 +8,7 @@ echo "  CHECKPOINT API - End-to-End Test Suite"
 echo "=============================================="
 echo ""
 
-BASE_URL="https://alpefresh.app/asistencia/api/checkpoint.php"
+BASE_URL="https://asistencia.alpefresh.app/api/checkpoint.php"
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -30,7 +30,7 @@ echo "════════════════════════�
 
 cat << 'EOF'
 Request:
-curl -X POST https://alpefresh.app/asistencia/api/checkpoint.php \
+curl -X POST https://asistencia.alpefresh.app/api/checkpoint.php \
   -H "Content-Type: application/json" \
   -H "Cookie: PHPSESSID=your_session_id_here" \
   -d '{
@@ -59,7 +59,7 @@ echo "════════════════════════�
 
 cat << 'EOF'
 Request:
-curl -X POST https://alpefresh.app/asistencia/api/checkpoint.php \
+curl -X POST https://asistencia.alpefresh.app/api/checkpoint.php \
   -H "Content-Type: application/json" \
   -H "Cookie: PHPSESSID=your_session_id_here" \
   -d '{
@@ -89,7 +89,7 @@ echo "════════════════════════�
 
 cat << 'EOF'
 Request:
-curl -X POST https://alpefresh.app/asistencia/api/checkpoint.php \
+curl -X POST https://asistencia.alpefresh.app/api/checkpoint.php \
   -H "Content-Type: application/json" \
   -H "Cookie: PHPSESSID=your_session_id_here" \
   -d '{
@@ -118,7 +118,7 @@ echo "════════════════════════�
 
 cat << 'EOF'
 // Test Check-in
-fetch('/asistencia/api/checkpoint.php', {
+fetch('/api/checkpoint.php', {
   method: 'POST',
   headers: {'Content-Type': 'application/json'},
   body: JSON.stringify({
@@ -133,7 +133,7 @@ fetch('/asistencia/api/checkpoint.php', {
 .then(data => console.log('Check-in:', data));
 
 // Test Check-out (after check-in)
-fetch('/asistencia/api/checkpoint.php', {
+fetch('/api/checkpoint.php', {
   method: 'POST',
   headers: {'Content-Type': 'application/json'},
   body: JSON.stringify({
@@ -154,7 +154,7 @@ echo "  Testing Instructions"
 echo "=============================================="
 echo ""
 echo "Option 1: Browser Testing (Recommended)"
-echo "  1. Login to https://alpefresh.app/asistencia"
+echo "  1. Login to https://asistencia.alpefresh.app"
 echo "  2. Open browser console (F12)"
 echo "  3. Copy and paste the JavaScript code above"
 echo "  4. Check the console output"
@@ -166,7 +166,7 @@ echo "  3. Replace 'your_session_id_here' in curl commands"
 echo "  4. Run the curl commands"
 echo ""
 echo "Option 3: UI Testing"
-echo "  1. Go to: https://alpefresh.app/asistencia/asistencias_checkpoint.php"
+echo "  1. Go to: https://asistencia.alpefresh.app/asistencias_checkpoint.php"
 echo "  2. Select a location"
 echo "  3. Click 'Hacer Check-In'"
 echo "  4. Test the full workflow"

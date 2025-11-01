@@ -604,7 +604,7 @@ $page_title = 'Control de Asistencia';
                 try {
                     await getGPSPosition();
 
-                    const response = await fetch('/asistencia/api/checkpoint.php', {
+                    const response = await fetch('/api/checkpoint.php', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
@@ -650,7 +650,7 @@ $page_title = 'Control de Asistencia';
                 try {
                     await getGPSPosition();
 
-                    const response = await fetch('/asistencia/api/checkpoint.php', {
+                    const response = await fetch('/api/checkpoint.php', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
@@ -719,7 +719,7 @@ $page_title = 'Control de Asistencia';
 
                     const reason = document.getElementById('transfer-reason').value;
 
-                    const response = await fetch('/asistencia/api/checkpoint.php', {
+                    const response = await fetch('/api/checkpoint.php', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'

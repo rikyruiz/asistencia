@@ -241,7 +241,7 @@ echo "=================================================\n\n";
 if ($allPassed) {
     echo "🎉 ALL TESTS PASSED! Checkpoint system is fully functional.\n\n";
     echo "Next steps:\n";
-    echo "1. Access UI: https://alpefresh.app/asistencia/asistencias_checkpoint.php\n";
+    echo "1. Access UI: https://asistencia.alpefresh.app/asistencias_checkpoint.php\n";
     echo "2. Test API manually with curl or Postman\n";
     echo "3. Test user workflows end-to-end\n";
 } else {

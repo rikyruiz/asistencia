@@ -54,7 +54,7 @@ $transfers = $transferStmt->fetchAll();
             <i class="fas fa-route" style="color: var(--gold);"></i> Checkpoints de Hoy
         </span>
         <?php if (count($checkpoints) > 0): ?>
-        <a href="/asistencia/asistencias_checkpoint.php" class="btn btn-sm" style="font-size: 0.875rem;">
+        <a href="/asistencias_checkpoint.php" class="btn btn-sm" style="font-size: 0.875rem;">
             <i class="fas fa-fingerprint"></i> Ir a Control
         </a>
         <?php endif; ?>
@@ -209,7 +209,7 @@ $transfers = $transferStmt->fetchAll();
         <div style="text-align: center; padding: 2rem 1rem; color: var(--gray-500);">
             <i class="fas fa-calendar-day" style="font-size: 2.5rem; margin-bottom: 1rem; opacity: 0.3;"></i>
             <p style="margin-bottom: 0.5rem;">No hay checkpoints registrados hoy</p>
-            <a href="/asistencia/asistencias_checkpoint.php" class="btn btn-accent" style="margin-top: 1rem; text-decoration: none; display: inline-block;">
+            <a href="/asistencias_checkpoint.php" class="btn btn-accent" style="margin-top: 1rem; text-decoration: none; display: inline-block;">
                 <i class="fas fa-fingerprint"></i> Hacer Check-In
             </a>
         </div>

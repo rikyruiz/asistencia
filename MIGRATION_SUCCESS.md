@@ -62,7 +62,7 @@ Tracks employee movement between authorized locations during work hours.
 
 ### Sample Request:
 ```bash
-curl -X POST https://alpefresh.app/asistencia/api/checkpoint.php \
+curl -X POST https://asistencia.alpefresh.app/api/checkpoint.php \
   -H "Content-Type: application/json" \
   -d '{
     "action": "checkin",
