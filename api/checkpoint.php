@@ -86,22 +86,10 @@ try {
     switch ($action) {
 
         case 'checkin':
-            // Check if there's already an active checkpoint today
-            $stmt = $db->prepare("
-                SELECT id FROM registros_asistencia
-                WHERE usuario_id = ? AND fecha = ? AND is_active = 1 AND hora_salida IS NULL
-            ");
-            $stmt->execute([$userId, $fecha]);
-            $activeCheckpoint = $stmt->fetch();
-
-            if ($activeCheckpoint) {
-                http_response_code(400);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Ya tienes un checkpoint activo. Primero debes hacer checkout.'
-                ]);
-                exit;
-            }
+            // Auto-close any active checkpoints first (optional - allows multiple active if needed)
+            // Uncomment the next 3 lines to auto-close previous checkpoints
+            // $stmt = $db->prepare("CALL sp_close_active_checkpoints(?, ?, NOW())");
+            // $stmt->execute([$userId, $fecha]);
 
             // Get next sequence number
             $stmt = $db->prepare("
