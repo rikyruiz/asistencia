@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+
+# Protect sensitive directories
+Disallow: /config/
+Disallow: /includes/
+Disallow: /admin/
+Disallow: /logs/
+Disallow: /docs/
+
+# Allow search engines to index public pages
+Allow: /login.php
+Allow: /register.php
+Allow: /index.php
+
+Sitemap: https://asistencia.alpefresh.app/sitemap.xml

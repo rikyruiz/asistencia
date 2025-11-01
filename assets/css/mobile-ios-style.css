@@ -1,0 +1,647 @@
+/* iOS-Style Mobile Design System for Marketplace
+   Following Apple's Human Interface Guidelines */
+
+/* Mobile iOS-Style Navigation */
+.mobile-nav-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 8px;
+}
+
+.mobile-nav-menu {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 10000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.mobile-nav-menu.active {
+    display: flex;
+    opacity: 1;
+}
+
+.mobile-nav-content {
+    background: white;
+    width: 75%;
+    height: 100%;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-y: auto;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.2);
+}
+
+.mobile-nav-menu.active .mobile-nav-content {
+    transform: translateX(0);
+}
+
+.mobile-nav-header {
+    background: linear-gradient(180deg, var(--navy, #003366), #004080);
+    padding: 2rem 1.5rem;
+    color: white;
+}
+
+.mobile-nav-items {
+    padding: 1rem 0;
+}
+
+.mobile-nav-item {
+    display: block;
+    padding: 1rem 1.5rem;
+    color: var(--gray-700, #374151);
+    text-decoration: none;
+    font-size: 1.0625rem;
+    font-weight: 500;
+    border-bottom: 1px solid var(--gray-100, #f3f4f6);
+    transition: background 0.2s;
+}
+
+.mobile-nav-item:active {
+    background: var(--gray-50, #f9fafb);
+}
+
+/* iOS-style Bottom Tab Bar */
+.mobile-tab-bar {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 0.5px solid rgba(0, 0, 0, 0.1);
+    padding: 8px 0;
+    z-index: 1000;
+}
+
+.mobile-tabs {
+    display: flex;
+    justify-content: space-around;
+    padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+.mobile-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 4px;
+    color: var(--gray-500, #6b7280);
+    text-decoration: none;
+    font-size: 0.625rem;
+    transition: color 0.2s;
+}
+
+.mobile-tab.active {
+    color: var(--navy, #003366);
+}
+
+.mobile-tab-icon {
+    font-size: 1.25rem;
+    margin-bottom: 2px;
+}
+
+/* iOS-style Cards */
+.ios-card {
+    background: white;
+    border-radius: 10px;
+    margin: 0.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+/* iOS-style Segmented Control */
+.segmented-control {
+    display: none;
+    background: var(--gray-100, #f3f4f6);
+    border-radius: 9px;
+    padding: 2px;
+    margin: 1rem;
+}
+
+.segmented-control-items {
+    display: flex;
+    gap: 2px;
+}
+
+.segmented-control-item {
+    flex: 1;
+    padding: 8px 12px;
+    background: transparent;
+    border: none;
+    border-radius: 7px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--gray-600, #4b5563);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.segmented-control-item.active {
+    background: white;
+    color: var(--navy, #003366);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* iOS-style List Items */
+.ios-list {
+    background: white;
+    border-radius: 10px;
+    margin: 0 1rem;
+    overflow: hidden;
+}
+
+.ios-list-item {
+    padding: 12px 16px;
+    border-bottom: 0.5px solid var(--gray-200, #e5e7eb);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+    transition: background 0.2s;
+}
+
+.ios-list-item:active {
+    background: var(--gray-50, #f9fafb);
+}
+
+.ios-list-item:last-child {
+    border-bottom: none;
+}
+
+.ios-list-title {
+    font-size: 1rem;
+    color: var(--gray-900, #111827);
+}
+
+.ios-list-subtitle {
+    font-size: 0.875rem;
+    color: var(--gray-500, #6b7280);
+    margin-top: 2px;
+}
+
+.ios-list-value {
+    font-size: 1rem;
+    color: var(--gold, #fdb714);
+    font-weight: 600;
+}
+
+.ios-list-chevron {
+    color: var(--gray-400, #9ca3af);
+    margin-left: 8px;
+}
+
+/* Pull to Refresh */
+.pull-to-refresh {
+    display: none;
+    position: fixed;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    background: white;
+    border-radius: 20px;
+    padding: 8px 16px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    font-size: 0.875rem;
+    color: var(--gray-600, #4b5563);
+}
+
+.pull-to-refresh.active {
+    display: block;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateX(-50%) translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Mobile-optimized form controls */
+@media (max-width: 768px) {
+    select, input[type="number"], input[type="date"], input[type="text"], input[type="email"], textarea {
+        width: 100%;
+        font-size: 16px;
+        padding: 14px 16px;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        border-radius: 10px;
+        border: 1px solid var(--gray-300, #d1d5db);
+        background-color: white;
+        box-sizing: border-box;
+        display: block;
+        transition: all 0.2s ease;
+    }
+
+    select:focus, input:focus, textarea:focus {
+        outline: none;
+        border-color: var(--navy, #003366);
+        box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.1);
+    }
+
+    select {
+        background: white url('data:image/svg+xml;utf8,<svg fill="%23374151" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M7 7l3 3 3-3" stroke="%23374151" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>') no-repeat right 12px center;
+        background-size: 20px;
+        padding-right: 44px;
+        cursor: pointer;
+    }
+
+    /* Fix for iOS zoom on focus */
+    input[type="date"]::-webkit-date-and-time-value {
+        text-align: left;
+    }
+
+    /* Ensure proper date input styling */
+    input[type="date"] {
+        min-height: 48px;
+        position: relative;
+    }
+
+    input[type="date"]::-webkit-calendar-picker-indicator {
+        position: absolute;
+        right: 10px;
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+    }
+
+    /* Fix optgroup styling */
+    optgroup {
+        font-weight: 600;
+        color: var(--gray-700, #374151);
+        font-size: 14px;
+    }
+
+    option {
+        padding: 8px;
+        font-size: 16px;
+    }
+}
+
+/* Responsive Mobile Styles */
+@media (max-width: 768px) {
+    body {
+        padding-bottom: 80px;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .navbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 999;
+        background: linear-gradient(180deg, var(--navy, #003366), #004080);
+    }
+
+    .nav-container {
+        padding: 0 1rem;
+    }
+
+    .nav-brand {
+        gap: 0.75rem;
+    }
+
+    .logo {
+        font-size: 1rem;
+        padding: 6px 12px;
+    }
+
+    .nav-title h1 {
+        font-size: 1.125rem;
+    }
+
+    .nav-title p {
+        display: none;
+    }
+
+    .nav-links {
+        display: none;
+    }
+
+    .mobile-nav-toggle {
+        display: block;
+    }
+
+    .mobile-tab-bar {
+        display: block;
+    }
+
+    .dashboard, .container, main {
+        padding: 80px 0 0 0;
+        max-width: 100%;
+    }
+
+    .header {
+        border-radius: 0;
+        border: none;
+        margin: 0;
+        padding: 1rem;
+    }
+
+    h1 {
+        font-size: 1.75rem;
+    }
+
+    h2 {
+        font-size: 1.5rem;
+        margin-bottom: 0.75rem;
+    }
+
+    h3 {
+        font-size: 1.125rem;
+        padding: 0 1rem;
+    }
+
+    .subtitle {
+        font-size: 0.8125rem;
+        line-height: 1.4;
+    }
+
+    .filters, .filter-section {
+        display: flex;
+        flex-direction: column;
+        padding: 1rem;
+        border-radius: 10px;
+        margin: 0.5rem;
+        gap: 1rem;
+        background: var(--gray-50, #f9fafb);
+        border: 1px solid var(--gray-200, #e5e7eb);
+    }
+
+    .filter-group {
+        width: 100%;
+        min-width: 100%;
+        margin-bottom: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .filter-label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        margin-bottom: 0;
+        color: var(--gray-700, #374151);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Quick date buttons container */
+    .quick-date-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+    .quick-date-btn {
+        flex: 1;
+        min-width: calc(33.33% - 0.34rem);
+        padding: 10px 8px;
+        font-size: 0.8125rem;
+        border: 1px solid var(--gray-300, #d1d5db);
+        background: white;
+        border-radius: 8px;
+        color: var(--navy, #003366);
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-align: center;
+    }
+
+    .quick-date-btn:active {
+        background: var(--navy, #003366);
+        color: white;
+        transform: scale(0.98);
+    }
+
+    button, .btn {
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+    }
+
+    .apply-btn, .reset-btn, .btn-primary, .btn-secondary {
+        width: 100%;
+        padding: 14px 20px;
+        font-size: 1rem;
+        margin: 0.5rem 0 0 0;
+        border-radius: 10px;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: block;
+        text-align: center;
+        box-sizing: border-box;
+    }
+
+    .apply-btn, .btn-primary {
+        background-color: var(--gold, #fdb714);
+        color: var(--navy, #003366);
+    }
+
+    .apply-btn:active, .btn-primary:active {
+        background-color: #f59e0b;
+        transform: scale(0.98);
+    }
+
+    .reset-btn, .btn-secondary {
+        background-color: var(--gray-200, #e5e7eb);
+        color: var(--gray-700, #374151);
+        border: 1px solid var(--gray-300, #d1d5db);
+    }
+
+    .reset-btn:active, .btn-secondary:active {
+        background-color: var(--gray-300, #d1d5db);
+        transform: scale(0.98);
+    }
+
+    /* Button group for side-by-side buttons */
+    .button-group {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+    .button-group .apply-btn,
+    .button-group .reset-btn,
+    .button-group .btn-primary,
+    .button-group .btn-secondary {
+        flex: 1;
+        margin: 0;
+    }
+
+    .stats-grid, .grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+        padding: 0 0.5rem;
+    }
+
+    .stat-card, .card {
+        padding: 1.25rem 1rem;
+        border-radius: 10px;
+    }
+
+    .commodity-grid {
+        grid-template-columns: 1fr;
+        gap: 0;
+        padding: 0;
+        margin: 0;
+    }
+
+    .commodity-card {
+        border-radius: 0;
+        border: none;
+        border-bottom: 0.5px solid var(--gray-200, #e5e7eb);
+        padding: 1rem;
+        margin: 0;
+    }
+
+    .commodity-card:active {
+        background: var(--gray-50, #f9fafb);
+    }
+
+    /* Tables */
+    table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    thead {
+        position: sticky;
+        top: 0;
+        background: white;
+        z-index: 10;
+    }
+
+    th {
+        font-size: 0.6875rem;
+        padding: 10px 8px;
+        position: sticky;
+        top: 0;
+        background: var(--gray-50, #f9fafb);
+    }
+
+    td {
+        font-size: 0.8125rem;
+        padding: 10px 8px;
+    }
+
+    .footer {
+        margin-bottom: 80px;
+        padding: 1rem;
+    }
+
+    /* Segmented control visible on mobile */
+    .segmented-control {
+        display: flex;
+    }
+
+    /* Safe area padding for iPhone X and newer */
+    .dashboard, .container, main {
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+    }
+
+    .mobile-tab-bar {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    /* Smooth scrolling */
+    .dashboard, .container, main {
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Touch feedback */
+    button, a, .card, select, input {
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+    }
+}
+
+/* Landscape mode adjustments */
+@media (max-width: 768px) and (orientation: landscape) {
+    .mobile-tab-bar {
+        padding: 4px 0;
+    }
+
+    .mobile-tab {
+        font-size: 0.5625rem;
+    }
+
+    .mobile-tab-icon {
+        font-size: 1rem;
+    }
+
+    .dashboard, .container, main {
+        padding-top: 60px;
+    }
+
+    .navbar {
+        padding: 0.5rem 0;
+    }
+}
+
+/* Dark mode support for iOS */
+@media (prefers-color-scheme: dark) {
+    @media (max-width: 768px) {
+        .mobile-nav-content {
+            background: #1a1a1a;
+        }
+
+        .mobile-nav-item {
+            color: #e0e0e0;
+            border-color: #333;
+        }
+
+        .mobile-tab-bar {
+            background: rgba(30, 30, 30, 0.98);
+            border-top-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .mobile-tab {
+            color: #999;
+        }
+
+        .mobile-tab.active {
+            color: var(--gold, #fdb714);
+        }
+
+        .ios-card, .ios-list {
+            background: #2a2a2a;
+        }
+
+        .ios-list-item {
+            background: #2a2a2a;
+            border-color: #444;
+        }
+
+        .ios-list-title {
+            color: #e0e0e0;
+        }
+    }
+}

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Icon Generator</title>
+</head>
+<body>
+    <canvas id="canvas192" width="192" height="192"></canvas>
+    <canvas id="canvas512" width="512" height="512"></canvas>
+
+    <script>
+    function drawIcon(canvas, size) {
+        const ctx = canvas.getContext('2d');
+
+        // Background gradient
+        const gradient = ctx.createLinearGradient(0, 0, size, size);
+        gradient.addColorStop(0, '#001f3f');
+        gradient.addColorStop(1, '#004080');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, size, size);
+
+        // White circle background
+        ctx.fillStyle = 'white';
+        ctx.beginPath();
+        ctx.arc(size/2, size/2, size/3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Clock icon
+        ctx.strokeStyle = '#001f3f';
+        ctx.lineWidth = size/20;
+        ctx.beginPath();
+        ctx.arc(size/2, size/2, size/4, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Clock hands
+        ctx.beginPath();
+        ctx.moveTo(size/2, size/2);
+        ctx.lineTo(size/2, size/2 - size/6);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(size/2, size/2);
+        ctx.lineTo(size/2 + size/8, size/2);
+        ctx.stroke();
+
+        // Convert to PNG
+        canvas.toBlob(function(blob) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `icon-${size}.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        });
+    }
+
+    drawIcon(document.getElementById('canvas192'), 192);
+    drawIcon(document.getElementById('canvas512'), 512);
+    </script>
+</body>
+</html>

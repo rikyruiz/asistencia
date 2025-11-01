@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Location Frame</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: system-ui, -apple-system, sans-serif;
+            text-align: center;
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 18px;
+            background: #001f3f;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        button:disabled {
+            opacity: 0.5;
+        }
+        #status {
+            margin-top: 20px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <button id="requestBtn" onclick="requestLocation()">
+        <span id="btnText">Permitir Ubicación</span>
+    </button>
+    <div id="status"></div>
+
+    <script>
+    function requestLocation() {
+        const btn = document.getElementById('requestBtn');
+        const status = document.getElementById('status');
+        const btnText = document.getElementById('btnText');
+
+        btn.disabled = true;
+        btnText.textContent = 'Solicitando...';
+        status.textContent = 'Activando GPS...';
+
+        if (!navigator.geolocation) {
+            sendMessage({ error: 'Geolocation not supported' });
+            return;
+        }
+
+        // Intentar con getCurrentPosition al hacer click
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                btnText.textContent = '✓ Ubicación Activa';
+                status.textContent = 'GPS activado correctamente';
+                btn.style.background = '#10b981';
+
+                // Enviar ubicación al padre
+                sendMessage({
+                    success: true,
+                    coords: {
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                        accuracy: position.coords.accuracy
+                    }
+                });
+
+                // Iniciar watchPosition
+                startWatching();
+            },
+            function(error) {
+                btnText.textContent = '✗ Error';
+                btn.style.background = '#dc2626';
+
+                let errorMsg = 'Error desconocido';
+                switch(error.code) {
+                    case 1:
+                        errorMsg = 'Permisos denegados';
+                        status.textContent = 'Por favor, permite el acceso a ubicación en tu navegador';
+                        break;
+                    case 2:
+                        errorMsg = 'Posición no disponible';
+                        status.textContent = 'No se puede obtener la ubicación';
+                        break;
+                    case 3:
+                        errorMsg = 'Tiempo agotado';
+                        status.textContent = 'La solicitud tardó demasiado';
+                        break;
+                }
+
+                sendMessage({ error: errorMsg, code: error.code });
+
+                // Re-habilitar botón para reintentar
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btnText.textContent = 'Reintentar';
+                    btn.style.background = '#001f3f';
+                }, 2000);
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            }
+        );
+    }
+
+    function startWatching() {
+        navigator.geolocation.watchPosition(
+            function(position) {
+                sendMessage({
+                    update: true,
+                    coords: {
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                        accuracy: position.coords.accuracy
+                    }
+                });
+            },
+            function(error) {
+                console.error('Watch error:', error);
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            }
+        );
+    }
+
+    function sendMessage(data) {
+        // Enviar mensaje al padre
+        if (window.parent !== window) {
+            window.parent.postMessage({
+                type: 'location',
+                ...data
+            }, '*');
+        }
+    }
+
+    // Auto-click en desarrollo
+    if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+        setTimeout(() => {
+            document.getElementById('status').textContent = 'Modo desarrollo - Auto-activando...';
+            requestLocation();
+        }, 1000);
+    }
+    </script>
+</body>
+</html>

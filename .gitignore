@@ -1,0 +1,40 @@
+# Sensitive configuration files
+config/database.php
+
+# Environment files
+.env
+.env.local
+
+# Session files
+sesiones/
+
+# Logs
+*.log
+error_log
+
+# Temporary files
+*.tmp
+*.swp
+*~
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.bak
+*.backup
+*_backup.php
+
+# Cache
+cache/
+*.cache
+
+# Uploads (if any)
+uploads/
+tmp/
