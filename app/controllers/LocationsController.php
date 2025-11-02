@@ -56,8 +56,16 @@ class LocationsController extends Controller {
     /**
      * Update location
      */
-    public function update($id) {
-        if (!$this->isPost() || !$this->validateCsrfToken()) {
+    public function update($id = null) {
+        if (!$id) {
+            $this->json(['error' => 'ID de ubicación no especificado'], 400);
+        }
+
+        if (!$this->isPost()) {
+            $this->json(['error' => 'Método no permitido'], 405);
+        }
+
+        if (!$this->validateCsrfToken()) {
             $this->json(['error' => 'Token de seguridad inválido'], 403);
         }
 

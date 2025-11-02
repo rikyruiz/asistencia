@@ -16,7 +16,7 @@
 
     <!-- Edit Form -->
     <div class="bg-white rounded-xl shadow p-6">
-        <form action="<?= url('locations/update/' . $location['id']) ?>" method="POST" id="editLocationForm">
+        <form action="<?= url('admin/updateLocation/' . $location['id']) ?>" method="POST" id="editLocationForm">
             <?= csrfField() ?>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -237,31 +237,19 @@
 </div>
 
 <script>
-// Form submission
+// Form validation before submit
 document.getElementById('editLocationForm').addEventListener('submit', function(e) {
-    e.preventDefault();
+    const nombre = document.getElementById('nombre').value.trim();
+    const latitud = document.getElementById('latitud').value;
+    const longitud = document.getElementById('longitud').value;
 
-    const formData = new FormData(this);
+    if (!nombre || !latitud || !longitud) {
+        e.preventDefault();
+        alert('Por favor completa los campos requeridos: Nombre, Latitud y Longitud');
+        return false;
+    }
 
-    fetch(this.action, {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert(data.message || 'Ubicación actualizada correctamente');
-            window.location.href = '<?= url('admin/locations') ?>';
-        } else {
-            alert(data.error || 'Error al actualizar la ubicación');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error al procesar la solicitud');
-    });
+    // Allow normal form submission
+    return true;
 });
 </script>
