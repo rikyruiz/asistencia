@@ -1,0 +1,25 @@
+# Apache Configuration for MVC
+RewriteEngine On
+
+# Prevent direct access to app folder
+RewriteRule ^app/.*$ - [F,L]
+
+# Redirect all requests to public folder
+RewriteCond %{REQUEST_URI} !^/public/
+RewriteRule ^(.*)$ public/$1 [L]
+
+# Security Headers
+Header set X-Frame-Options "SAMEORIGIN"
+Header set X-XSS-Protection "1; mode=block"
+Header set X-Content-Type-Options "nosniff"
+Header set Referrer-Policy "strict-origin-when-cross-origin"
+
+# PHP Settings
+php_value upload_max_filesize 5M
+php_value post_max_size 5M
+php_value max_execution_time 300
+php_value max_input_time 300
+php_value memory_limit 256M
+
+# Timezone
+php_value date.timezone "America/Mexico_City"

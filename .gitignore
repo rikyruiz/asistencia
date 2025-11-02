@@ -1,0 +1,52 @@
+# Logs
+logs/
+*.log
+
+# Cache
+cache/
+*.cache
+
+# Uploads
+uploads/*
+!uploads/.gitkeep
+
+# Environment files
+.env
+.env.local
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.backup
+*.bak
+*.tmp
+
+# Database dumps
+*.sql.gz
+*.sql.zip
+database/*.sql.backup
+
+# Node modules (if using npm for frontend assets)
+node_modules/
+
+# Vendor (if using Composer later)
+vendor/
+
+# Session files
+sessions/
+
+# Sensitive configuration
+app/config/config.local.php
+
+# Testing
+phpunit.xml
+.phpunit.result.cache
