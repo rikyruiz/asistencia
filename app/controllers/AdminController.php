@@ -620,4 +620,38 @@ class AdminController extends Controller {
 
         return $stats;
     }
+
+    /**
+     * Reports Dashboard
+     */
+    public function reports() {
+        // Get date range from request or default to current month
+        $startDate = $this->getGet('start_date', date('Y-m-01'));
+        $endDate = $this->getGet('end_date', date('Y-m-d'));
+
+        // Get filters
+        $filters = [
+            'user_id' => $this->getGet('user_id'),
+            'location_id' => $this->getGet('location_id'),
+            'tipo' => $this->getGet('tipo')
+        ];
+
+        // Get all users for filter
+        $users = $this->userModel->all('nombre', 'ASC');
+
+        // Get all locations for filter
+        $locations = $this->locationModel->getActiveLocations();
+
+        $data = [
+            'title' => 'Reportes',
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'filters' => $filters,
+            'users' => $users,
+            'locations' => $locations,
+            'csrf_token' => $this->generateCsrfToken()
+        ];
+
+        $this->viewWithLayout('admin/reports/index', $data, 'main');
+    }
 }
