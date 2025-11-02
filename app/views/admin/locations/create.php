@@ -55,6 +55,8 @@
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent">
                         <option value="oficina" selected>Oficina</option>
                         <option value="almacen">Almacén</option>
+                        <option value="bodega">Bodega</option>
+                        <option value="cooler">Cooler</option>
                         <option value="tienda">Tienda</option>
                         <option value="fabrica">Fábrica</option>
                         <option value="sucursal">Sucursal</option>

@@ -57,6 +57,8 @@
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent">
                         <option value="oficina" <?= $location['tipo_ubicacion'] === 'oficina' ? 'selected' : '' ?>>Oficina</option>
                         <option value="almacen" <?= $location['tipo_ubicacion'] === 'almacen' ? 'selected' : '' ?>>Almacén</option>
+                        <option value="bodega" <?= $location['tipo_ubicacion'] === 'bodega' ? 'selected' : '' ?>>Bodega</option>
+                        <option value="cooler" <?= $location['tipo_ubicacion'] === 'cooler' ? 'selected' : '' ?>>Cooler</option>
                         <option value="tienda" <?= $location['tipo_ubicacion'] === 'tienda' ? 'selected' : '' ?>>Tienda</option>
                         <option value="fabrica" <?= $location['tipo_ubicacion'] === 'fabrica' ? 'selected' : '' ?>>Fábrica</option>
                         <option value="sucursal" <?= $location['tipo_ubicacion'] === 'sucursal' ? 'selected' : '' ?>>Sucursal</option>
