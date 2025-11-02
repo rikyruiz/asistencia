@@ -306,11 +306,11 @@ class AdminController extends Controller {
      * Create User Form
      */
     public function createUser() {
-        $locations = $this->locationModel->getActiveLocations();
+        $allLocations = $this->locationModel->getActiveLocations();
 
         $data = [
             'title' => 'Nuevo Usuario',
-            'locations' => $locations,
+            'allLocations' => $allLocations,
             'csrf_token' => $this->generateCsrfToken()
         ];
 
@@ -326,45 +326,53 @@ class AdminController extends Controller {
             $this->redirect('admin/users');
         }
 
+        // Generate employee number
+        $numeroEmpleado = $this->userModel->generateEmployeeNumber();
+
         // Validate input
         $data = [
+            'username' => sanitize($this->getPost('username')),
             'email' => sanitize($this->getPost('email')),
             'nombre' => sanitize($this->getPost('nombre')),
             'apellidos' => sanitize($this->getPost('apellidos')),
             'pin' => sanitize($this->getPost('pin')),
             'rol' => sanitize($this->getPost('rol', 'empleado')),
             'departamento' => sanitize($this->getPost('departamento')),
-            'numero_empleado' => sanitize($this->getPost('numero_empleado')),
+            'numero_empleado' => $numeroEmpleado,
             'telefono' => sanitize($this->getPost('telefono')),
-            'direccion' => sanitize($this->getPost('direccion')),
-            'fecha_ingreso' => sanitize($this->getPost('fecha_ingreso')),
             'activo' => $this->getPost('activo') ? 1 : 0,
-            'email_verificado' => 1, // Admin creates verified users
+            'email_verificado' => $this->getPost('email_verificado') ? 1 : 0,
             'creado_por' => getUserId()
         ];
 
         // Validate required fields
-        if (empty($data['email']) || empty($data['nombre']) || empty($data['apellidos']) || empty($data['pin'])) {
+        if (empty($data['username']) || empty($data['email']) || empty($data['nombre']) || empty($data['apellidos']) || empty($data['pin'])) {
             $this->setFlash('error', 'Por favor completa todos los campos requeridos', 'error');
-            $this->redirect('admin/users/create');
+            $this->redirect('admin/createUser');
         }
 
         // Validate email
         if (!isValidEmail($data['email'])) {
             $this->setFlash('error', 'Email inválido', 'error');
-            $this->redirect('admin/users/create');
+            $this->redirect('admin/createUser');
+        }
+
+        // Check if username already exists
+        if ($this->userModel->findByUsername($data['username'])) {
+            $this->setFlash('error', 'El nombre de usuario ya está en uso', 'error');
+            $this->redirect('admin/createUser');
         }
 
         // Check if email already exists
         if ($this->userModel->findByEmail($data['email'])) {
             $this->setFlash('error', 'El email ya está registrado', 'error');
-            $this->redirect('admin/users/create');
+            $this->redirect('admin/createUser');
         }
 
         // Validate PIN
         if (!isValidPin($data['pin'])) {
             $this->setFlash('error', 'El PIN debe ser de 6 dígitos', 'error');
-            $this->redirect('admin/users/create');
+            $this->redirect('admin/createUser');
         }
 
         // Hash PIN
@@ -376,19 +384,17 @@ class AdminController extends Controller {
         if ($userId) {
             // Assign locations
             $locations = $this->getPost('locations', []);
-            $primaryLocation = $this->getPost('primary_location');
 
             foreach ($locations as $locationId) {
-                $isPrimary = ($locationId == $primaryLocation);
-                $this->userModel->assignLocation($userId, $locationId, $isPrimary);
+                $this->userModel->assignLocation($userId, $locationId, 0);
             }
 
-            logActivity('user_created', ['user_id' => $userId, 'email' => $data['email']]);
-            $this->setFlash('success', 'Usuario creado correctamente', 'success');
+            logActivity('user_created', ['user_id' => $userId, 'username' => $data['username'], 'employee_number' => $numeroEmpleado]);
+            $this->setFlash('success', 'Usuario creado correctamente con número de empleado: ' . $numeroEmpleado, 'success');
             $this->redirect('admin/users');
         } else {
             $this->setFlash('error', 'Error al crear el usuario', 'error');
-            $this->redirect('admin/users/create');
+            $this->redirect('admin/createUser');
         }
     }
 
