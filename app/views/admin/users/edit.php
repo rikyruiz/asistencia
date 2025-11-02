@@ -128,7 +128,7 @@
                             <option value="empleado" <?= $user['rol'] === 'empleado' ? 'selected' : '' ?>>Empleado</option>
                             <option value="inspector" <?= $user['rol'] === 'inspector' ? 'selected' : '' ?>>Inspector</option>
                             <option value="admin" <?= $user['rol'] === 'admin' ? 'selected' : '' ?>>Administrador</option>
-                            <?php if (getUserRole() === 'superadmin'): ?>
+                            <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'superadmin'): ?>
                             <option value="superadmin" <?= $user['rol'] === 'superadmin' ? 'selected' : '' ?>>Superadmin</option>
                             <?php endif; ?>
                         </select>
