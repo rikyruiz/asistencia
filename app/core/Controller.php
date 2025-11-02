@@ -44,7 +44,7 @@ abstract class Controller {
         ob_start();
         $viewFile = '../app/views/' . $view . '.php';
         if (file_exists($viewFile)) {
-            require_once $viewFile;
+            require $viewFile;
             $content = ob_get_clean();
         } else {
             ob_end_clean();
@@ -54,7 +54,7 @@ abstract class Controller {
         // Load layout with content
         $layoutFile = '../app/views/layouts/' . $layout . '.php';
         if (file_exists($layoutFile)) {
-            require_once $layoutFile;
+            require $layoutFile;
         } else {
             echo $content; // Fallback to content only
         }
