@@ -274,8 +274,18 @@ class AuthController extends Controller {
         $userId = $this->userModel->create($userData);
 
         if ($userId) {
-            // TODO: Send verification email
-            $this->setFlash('login', "Cuenta creada exitosamente con número de empleado $numeroEmpleado. Por favor verifica tu email antes de iniciar sesión.", 'success');
+            // Generate verification token
+            $token = $this->userModel->generateVerificationToken($userId);
+
+            // Send verification email
+            $emailHelper = new EmailHelper();
+            $emailSent = $emailHelper->sendVerificationEmail($email, $nombre, $token);
+
+            if ($emailSent) {
+                $this->setFlash('login', "Cuenta creada exitosamente con número de empleado $numeroEmpleado. Hemos enviado un correo de verificación a $email.", 'success');
+            } else {
+                $this->setFlash('login', "Cuenta creada con número de empleado $numeroEmpleado. Error al enviar email de verificación. Contacta al administrador.", 'warning');
+            }
 
             logActivity('user_registered', ['user_id' => $userId, 'username' => $username, 'numero_empleado' => $numeroEmpleado]);
             $this->redirect('auth/login');
@@ -283,6 +293,69 @@ class AuthController extends Controller {
             $this->setFlash('register', 'Error al crear la cuenta. Por favor intenta de nuevo.', 'error');
             $this->redirect('auth/register');
         }
+    }
+
+    /**
+     * Verify email with token
+     */
+    public function verify($token = null) {
+        if (!$token) {
+            $this->setFlash('login', 'Token de verificación inválido', 'error');
+            $this->redirect('auth/login');
+        }
+
+        if ($this->userModel->verifyEmail($token)) {
+            $this->setFlash('login', 'Email verificado exitosamente. Ya puedes iniciar sesión.', 'success');
+            logActivity('email_verified', ['token' => substr($token, 0, 10) . '...']);
+        } else {
+            $this->setFlash('login', 'Token de verificación inválido o expirado', 'error');
+        }
+
+        $this->redirect('auth/login');
+    }
+
+    /**
+     * Resend verification email
+     */
+    public function resendVerification() {
+        if (!$this->isPost()) {
+            $this->redirect('auth/login');
+        }
+
+        $email = sanitize($this->getPost('email'));
+
+        if (!isValidEmail($email)) {
+            $this->setFlash('login', 'Email inválido', 'error');
+            $this->redirect('auth/login');
+        }
+
+        $user = $this->userModel->findByEmail($email);
+
+        if (!$user) {
+            // Don't reveal if email exists
+            $this->setFlash('login', 'Si el email existe y no está verificado, recibirás un nuevo correo de verificación', 'info');
+            $this->redirect('auth/login');
+        }
+
+        if ($user['email_verificado']) {
+            $this->setFlash('login', 'Esta cuenta ya está verificada', 'info');
+            $this->redirect('auth/login');
+        }
+
+        // Generate new verification token
+        $token = $this->userModel->generateVerificationToken($user['id']);
+
+        // Send verification email
+        $emailHelper = new EmailHelper();
+        $emailSent = $emailHelper->sendVerificationEmail($email, $user['nombre'], $token);
+
+        if ($emailSent) {
+            $this->setFlash('login', 'Se ha enviado un nuevo correo de verificación', 'success');
+        } else {
+            $this->setFlash('login', 'Error al enviar el correo. Por favor intenta de nuevo más tarde.', 'error');
+        }
+
+        $this->redirect('auth/login');
     }
 
     /**
@@ -317,14 +390,22 @@ class AuthController extends Controller {
             $this->redirect('auth/forgot-password');
         }
 
-        // Generate reset token
-        $token = $this->userModel->generateResetToken($email);
+        // Find user by email
+        $user = $this->userModel->findByEmail($email);
 
-        if ($token) {
-            // TODO: Send email with reset link
-            // For now, show the token (remove in production)
-            $resetUrl = url('auth/reset-password/' . $token);
-            $this->setFlash('forgot', 'Se ha enviado un enlace de recuperación a tu email', 'success');
+        if ($user) {
+            // Generate reset token
+            $token = $this->userModel->generateResetToken($email);
+
+            // Send reset email
+            $emailHelper = new EmailHelper();
+            $emailSent = $emailHelper->sendPasswordResetEmail($email, $user['nombre'], $token);
+
+            if ($emailSent) {
+                $this->setFlash('forgot', 'Se ha enviado un enlace de recuperación a tu email', 'success');
+            } else {
+                $this->setFlash('forgot', 'Error al enviar el correo. Por favor intenta de nuevo más tarde.', 'error');
+            }
 
             logActivity('password_reset_requested', ['email' => $email]);
         } else {

@@ -194,6 +194,38 @@ class User extends Model {
     }
 
     /**
+     * Generate email verification token
+     */
+    public function generateVerificationToken($userId) {
+        $token = generateToken();
+        $expiration = date('Y-m-d H:i:s', time() + 86400); // 24 hours
+
+        $this->update($userId, [
+            'token_verificacion' => $token,
+            'token_expiracion' => $expiration
+        ]);
+
+        return $token;
+    }
+
+    /**
+     * Verify email with token
+     */
+    public function verifyEmail($token) {
+        $sql = "SELECT * FROM usuarios WHERE token_verificacion = :token
+                AND token_expiracion > NOW() LIMIT 1";
+        $user = $this->db->selectOne($sql, ['token' => $token]);
+
+        if (!$user) return false;
+
+        return $this->update($user['id'], [
+            'email_verificado' => 1,
+            'token_verificacion' => null,
+            'token_expiracion' => null
+        ]);
+    }
+
+    /**
      * Generate password reset token
      */
     public function generateResetToken($email) {
