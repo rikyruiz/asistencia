@@ -4,10 +4,10 @@
  */
 
 // Environment
-define('ENVIRONMENT', 'development'); // 'development' or 'production'
+define('ENVIRONMENT', 'production'); // 'development' or 'production'
 
 // Base URLs
-define('BASE_URL', 'http://localhost/asistencia/');
+define('BASE_URL', 'https://asistencia.alpefresh.app/');
 define('SITE_NAME', 'Sistema de Control de Asistencia - Alpe Fresh');
 
 // Database Configuration
@@ -29,7 +29,7 @@ define('MAIL_FROM_NAME', 'Sistema de Asistencia - Alpe Fresh');
 // Security
 define('SESSION_NAME', 'asistencia_session');
 define('CSRF_TOKEN_NAME', 'csrf_token');
-define('SECURE_COOKIES', false); // Set to true in production with HTTPS
+define('SECURE_COOKIES', true); // Set to true in production with HTTPS
 define('SESSION_LIFETIME', 1800); // 30 minutes in seconds
 
 // PIN Configuration
