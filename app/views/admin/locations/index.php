@@ -5,7 +5,7 @@
             <h1 class="text-3xl font-bold text-gray-900">Gestión de Ubicaciones</h1>
             <p class="text-gray-600 mt-1">Administra las ubicaciones de trabajo autorizadas</p>
         </div>
-        <a href="<?= url('admin/locations/create') ?>"
+        <a href="<?= url('admin/createLocation') ?>"
            class="inline-flex items-center px-4 py-2 bg-navy text-white rounded-lg hover:bg-primary-700 transition-colors">
             <i class="fas fa-plus mr-2"></i>
             Nueva Ubicación
@@ -93,7 +93,7 @@
                         <p class="text-xs text-gray-500">Asignados</p>
                     </div>
                     <div class="flex items-center space-x-2">
-                        <a href="<?= url('admin/locations/edit/' . $location['id']) ?>"
+                        <a href="<?= url('admin/editLocation/' . $location['id']) ?>"
                            class="text-blue-600 hover:text-blue-800"
                            title="Editar">
                             <i class="fas fa-edit"></i>
@@ -120,7 +120,7 @@
                 <i class="fas fa-map-marked-alt text-6xl text-gray-300 mb-4"></i>
                 <h3 class="text-lg font-medium text-gray-900 mb-2">No hay ubicaciones registradas</h3>
                 <p class="text-gray-500 mb-6">Comienza agregando la primera ubicación de trabajo</p>
-                <a href="<?= url('admin/locations/create') ?>"
+                <a href="<?= url('admin/createLocation') ?>"
                    class="inline-flex items-center px-4 py-2 bg-navy text-white rounded-lg hover:bg-primary-700">
                     <i class="fas fa-plus mr-2"></i>
                     Agregar Primera Ubicación
@@ -157,7 +157,7 @@ function viewLocationDetails(id) {
     document.getElementById('modalContent').innerHTML = '<p class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando...</p>';
 
     // Fetch location details
-    fetch(`<?= url('admin/locations/get/') ?>${id}`, {
+    fetch(`<?= url('admin/getLocation/') ?>${id}`, {
         headers: {
             'X-Requested-With': 'XMLHttpRequest'
         }
@@ -272,7 +272,7 @@ function deleteLocation(id, name) {
         return;
     }
 
-    fetch(`<?= url('admin/locations/delete/') ?>${id}`, {
+    fetch(`<?= url('admin/deleteLocation/') ?>${id}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
