@@ -211,10 +211,9 @@ class AuthController extends Controller {
         $nombre = sanitize($this->getPost('nombre'));
         $apellidos = sanitize($this->getPost('apellidos'));
         $email = sanitize($this->getPost('email'));
-        $numeroEmpleado = sanitize($this->getPost('numero_empleado'));
 
         // Validate inputs
-        if (empty($username) || empty($pin) || empty($confirmPin) || empty($nombre) || empty($apellidos) || empty($numeroEmpleado)) {
+        if (empty($username) || empty($pin) || empty($confirmPin) || empty($nombre) || empty($apellidos) || empty($email)) {
             $this->setFlash('register', 'Por favor completa todos los campos requeridos', 'error');
             $this->redirect('auth/register');
         }
@@ -231,20 +230,14 @@ class AuthController extends Controller {
             $this->redirect('auth/register');
         }
 
-        // Check if employee number already exists
-        if ($this->userModel->findByEmployeeNumber($numeroEmpleado)) {
-            $this->setFlash('register', 'Este número de empleado ya está registrado', 'error');
-            $this->redirect('auth/register');
-        }
-
-        // Validate email if provided
-        if (!empty($email) && !isValidEmail($email)) {
+        // Validate email
+        if (!isValidEmail($email)) {
             $this->setFlash('register', 'El email proporcionado no es válido', 'error');
             $this->redirect('auth/register');
         }
 
-        // Check if email already exists (if provided)
-        if (!empty($email) && $this->userModel->findByEmail($email)) {
+        // Check if email already exists
+        if ($this->userModel->findByEmail($email)) {
             $this->setFlash('register', 'Este email ya está registrado', 'error');
             $this->redirect('auth/register');
         }
@@ -261,32 +254,30 @@ class AuthController extends Controller {
             $this->redirect('auth/register');
         }
 
+        // Generate employee number automatically
+        $numeroEmpleado = $this->userModel->generateEmployeeNumber();
+
         // Create user account
         $userData = [
             'username' => $username,
             'pin' => hashPin($pin),
             'nombre' => $nombre,
             'apellidos' => $apellidos,
-            'email' => !empty($email) ? $email : null,
+            'email' => $email,
             'numero_empleado' => $numeroEmpleado,
             'rol' => 'empleado', // Default role
             'activo' => 1,
-            'email_verificado' => empty($email) ? 1 : 0, // Auto-verify if no email
+            'email_verificado' => 0, // Require email verification
             'creado_en' => getCurrentDateTime()
         ];
 
         $userId = $this->userModel->create($userData);
 
         if ($userId) {
-            // If email provided, send verification email
-            if (!empty($email)) {
-                // TODO: Send verification email
-                $this->setFlash('login', 'Cuenta creada exitosamente. Por favor verifica tu email antes de iniciar sesión.', 'success');
-            } else {
-                $this->setFlash('login', 'Cuenta creada exitosamente. Ya puedes iniciar sesión.', 'success');
-            }
+            // TODO: Send verification email
+            $this->setFlash('login', "Cuenta creada exitosamente con número de empleado $numeroEmpleado. Por favor verifica tu email antes de iniciar sesión.", 'success');
 
-            logActivity('user_registered', ['user_id' => $userId, 'username' => $username]);
+            logActivity('user_registered', ['user_id' => $userId, 'username' => $username, 'numero_empleado' => $numeroEmpleado]);
             $this->redirect('auth/login');
         } else {
             $this->setFlash('register', 'Error al crear la cuenta. Por favor intenta de nuevo.', 'error');

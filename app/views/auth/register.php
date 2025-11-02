@@ -28,6 +28,11 @@
         <form action="<?= url('auth/processRegister') ?>" method="POST" id="registerForm">
             <?= csrfField() ?>
 
+            <!-- Info Message -->
+            <div class="bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-3 mb-4 rounded text-sm">
+                <p><i class="fas fa-info-circle mr-1"></i> Tu número de empleado se asignará automáticamente al registrarte.</p>
+            </div>
+
             <!-- Personal Information -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <!-- Nombre -->
@@ -59,20 +64,6 @@
                 </div>
             </div>
 
-            <!-- Employee Number -->
-            <div class="mb-4">
-                <label for="numero_empleado" class="block text-sm font-medium text-gray-700 mb-2">
-                    Número de Empleado <span class="text-red-500">*</span>
-                </label>
-                <input type="text"
-                       id="numero_empleado"
-                       name="numero_empleado"
-                       required
-                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent transition-all"
-                       placeholder="EMP001"
-                       value="<?= htmlspecialchars($_POST['numero_empleado'] ?? '') ?>">
-            </div>
-
             <!-- Username -->
             <div class="mb-4">
                 <label for="username" class="block text-sm font-medium text-gray-700 mb-2">
@@ -96,10 +87,10 @@
                 <p class="text-xs text-gray-500 mt-1">3-30 caracteres, solo letras, números y guión bajo</p>
             </div>
 
-            <!-- Email (Optional) -->
+            <!-- Email (Required) -->
             <div class="mb-4">
                 <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
-                    Email <span class="text-gray-500">(Opcional - para notificaciones)</span>
+                    Email <span class="text-red-500">*</span>
                 </label>
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -110,10 +101,12 @@
                     <input type="email"
                            id="email"
                            name="email"
+                           required
                            class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent transition-all"
                            placeholder="correo@ejemplo.com"
                            value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
                 </div>
+                <p class="text-xs text-gray-500 mt-1">Se enviará un enlace de verificación a este email</p>
             </div>
 
             <!-- PIN -->

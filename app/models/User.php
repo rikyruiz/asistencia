@@ -36,6 +36,29 @@ class User extends Model {
     }
 
     /**
+     * Generate next employee number
+     */
+    public function generateEmployeeNumber() {
+        $sql = "SELECT numero_empleado FROM usuarios
+                WHERE numero_empleado REGEXP '^EMP[0-9]+$'
+                ORDER BY CAST(SUBSTRING(numero_empleado, 4) AS UNSIGNED) DESC
+                LIMIT 1";
+
+        $result = $this->db->selectOne($sql);
+
+        if ($result && isset($result['numero_empleado'])) {
+            // Extract the number part and increment
+            $lastNumber = intval(substr($result['numero_empleado'], 3));
+            $nextNumber = $lastNumber + 1;
+        } else {
+            // Start from 1 if no employees exist
+            $nextNumber = 1;
+        }
+
+        return 'EMP' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+    }
+
+    /**
      * Authenticate user with username and PIN
      */
     public function authenticate($username, $pin) {
