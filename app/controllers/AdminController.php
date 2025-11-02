@@ -116,13 +116,13 @@ class AdminController extends Controller {
         // Validate required fields
         if (empty($data['nombre']) || empty($data['latitud']) || empty($data['longitud'])) {
             $this->setFlash('error', 'Por favor completa todos los campos requeridos', 'error');
-            $this->redirect('admin/locations/create');
+            $this->redirect('admin/createLocation');
         }
 
         // Check if code already exists
         if (!empty($data['codigo']) && $this->locationModel->findByCode($data['codigo'])) {
             $this->setFlash('error', 'El código de ubicación ya existe', 'error');
-            $this->redirect('admin/locations/create');
+            $this->redirect('admin/createLocation');
         }
 
         // Create location
@@ -134,7 +134,7 @@ class AdminController extends Controller {
             $this->redirect('admin/locations');
         } else {
             $this->setFlash('error', 'Error al crear la ubicación', 'error');
-            $this->redirect('admin/locations/create');
+            $this->redirect('admin/createLocation');
         }
     }
 
@@ -201,7 +201,7 @@ class AdminController extends Controller {
             $existing = $this->locationModel->findByCode($data['codigo']);
             if ($existing && $existing['id'] != $id) {
                 $this->setFlash('error', 'El código de ubicación ya existe', 'error');
-                $this->redirect('admin/locations/edit/' . $id);
+                $this->redirect('admin/editLocation/' . $id);
             }
         }
 
@@ -212,7 +212,7 @@ class AdminController extends Controller {
             $this->redirect('admin/locations');
         } else {
             $this->setFlash('error', 'Error al actualizar la ubicación', 'error');
-            $this->redirect('admin/locations/edit/' . $id);
+            $this->redirect('admin/editLocation/' . $id);
         }
     }
 
