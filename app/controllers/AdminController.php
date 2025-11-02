@@ -439,33 +439,48 @@ class AdminController extends Controller {
 
         // Prepare update data
         $data = [
+            'username' => sanitize($this->getPost('username')),
             'email' => sanitize($this->getPost('email')),
             'nombre' => sanitize($this->getPost('nombre')),
             'apellidos' => sanitize($this->getPost('apellidos')),
             'rol' => sanitize($this->getPost('rol')),
             'departamento' => sanitize($this->getPost('departamento')),
-            'numero_empleado' => sanitize($this->getPost('numero_empleado')),
             'telefono' => sanitize($this->getPost('telefono')),
-            'direccion' => sanitize($this->getPost('direccion')),
-            'fecha_ingreso' => sanitize($this->getPost('fecha_ingreso')),
-            'activo' => $this->getPost('activo') ? 1 : 0
+            'activo' => $this->getPost('activo') ? 1 : 0,
+            'email_verificado' => $this->getPost('email_verificado') ? 1 : 0
         ];
 
         // Update PIN if provided
-        $newPin = sanitize($this->getPost('pin'));
-        if (!empty($newPin)) {
+        $newPin = sanitize($this->getPost('new_pin'));
+        $confirmPin = sanitize($this->getPost('confirm_pin'));
+
+        if (!empty($newPin) || !empty($confirmPin)) {
+            if ($newPin !== $confirmPin) {
+                $this->setFlash('error', 'Los PINs no coinciden', 'error');
+                $this->redirect('admin/editUser/' . $id);
+            }
             if (!isValidPin($newPin)) {
                 $this->setFlash('error', 'El PIN debe ser de 6 dígitos', 'error');
-                $this->redirect('admin/users/edit/' . $id);
+                $this->redirect('admin/editUser/' . $id);
             }
             $data['pin'] = hashPin($newPin);
         }
 
+        // Check if username is unique
+        if ($data['username'] !== $user['username']) {
+            $existingUser = $this->userModel->findByUsername($data['username']);
+            if ($existingUser && $existingUser['id'] != $id) {
+                $this->setFlash('error', 'El nombre de usuario ya está en uso', 'error');
+                $this->redirect('admin/editUser/' . $id);
+            }
+        }
+
         // Check if email is unique
         if ($data['email'] !== $user['email']) {
-            if ($this->userModel->findByEmail($data['email'])) {
+            $existingUser = $this->userModel->findByEmail($data['email']);
+            if ($existingUser && $existingUser['id'] != $id) {
                 $this->setFlash('error', 'El email ya está registrado', 'error');
-                $this->redirect('admin/users/edit/' . $id);
+                $this->redirect('admin/editUser/' . $id);
             }
         }
 
@@ -473,7 +488,6 @@ class AdminController extends Controller {
         if ($this->userModel->update($id, $data)) {
             // Update location assignments
             $locations = $this->getPost('locations', []);
-            $primaryLocation = $this->getPost('primary_location');
 
             // Get current locations
             $currentLocations = $this->userModel->getLocations($id);
@@ -486,18 +500,19 @@ class AdminController extends Controller {
                 }
             }
 
-            // Add new locations
+            // Add new locations (default is_principal to 0 since we don't have that in the form)
             foreach ($locations as $locationId) {
-                $isPrimary = ($locationId == $primaryLocation);
-                $this->userModel->assignLocation($id, $locationId, $isPrimary);
+                if (!in_array($locationId, $currentLocationIds)) {
+                    $this->userModel->assignLocation($id, $locationId, 0);
+                }
             }
 
-            logActivity('user_updated', ['user_id' => $id, 'email' => $data['email']]);
+            logActivity('user_updated', ['user_id' => $id, 'username' => $data['username']]);
             $this->setFlash('success', 'Usuario actualizado correctamente', 'success');
             $this->redirect('admin/users');
         } else {
             $this->setFlash('error', 'Error al actualizar el usuario', 'error');
-            $this->redirect('admin/users/edit/' . $id);
+            $this->redirect('admin/editUser/' . $id);
         }
     }
 
