@@ -22,6 +22,13 @@ class User extends Model {
     }
 
     /**
+     * Find user by username
+     */
+    public function findByUsername($username) {
+        return $this->findBy('username', $username);
+    }
+
+    /**
      * Find user by employee number
      */
     public function findByEmployeeNumber($number) {
@@ -29,10 +36,10 @@ class User extends Model {
     }
 
     /**
-     * Authenticate user with email and PIN
+     * Authenticate user with username and PIN
      */
-    public function authenticate($email, $pin) {
-        $user = $this->findByEmail($email);
+    public function authenticate($username, $pin) {
+        $user = $this->findByUsername($username);
 
         if (!$user) {
             return false;

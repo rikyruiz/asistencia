@@ -34,24 +34,24 @@
         <form action="<?= url('auth/processLogin') ?>" method="POST">
             <?= csrfField() ?>
 
-            <!-- Email Input -->
+            <!-- Username Input -->
             <div class="mb-6">
-                <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
-                    Correo Electrónico
+                <label for="username" class="block text-sm font-medium text-gray-700 mb-2">
+                    Nombre de Usuario
                 </label>
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                         </svg>
                     </div>
-                    <input type="email"
-                           id="email"
-                           name="email"
+                    <input type="text"
+                           id="username"
+                           name="username"
                            required
                            class="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy focus:border-transparent transition-all"
-                           placeholder="usuario@ejemplo.com"
-                           value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
+                           placeholder="Tu nombre de usuario"
+                           value="<?= htmlspecialchars($_POST['username'] ?? '') ?>">
                 </div>
             </div>
 
@@ -101,7 +101,10 @@
         <!-- Additional Info -->
         <div class="mt-6 text-center">
             <p class="text-sm text-gray-600">
-                ¿Primera vez? Contacta al administrador para crear tu cuenta.
+                ¿Primera vez?
+                <a href="<?= url('auth/register') ?>" class="text-navy hover:text-primary-700 font-medium">
+                    Registra tu cuenta aquí
+                </a>
             </p>
         </div>
     </div>

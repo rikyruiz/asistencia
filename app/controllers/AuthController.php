@@ -46,18 +46,13 @@ class AuthController extends Controller {
             $this->redirect('auth/login');
         }
 
-        $email = sanitize($this->getPost('email'));
+        $username = sanitize($this->getPost('username'));
         $pin = sanitize($this->getPost('pin'));
         $remember = $this->getPost('remember');
 
         // Validate inputs
-        if (empty($email) || empty($pin)) {
-            $this->setFlash('login', 'Por favor ingresa tu email y PIN', 'error');
-            $this->redirect('auth/login');
-        }
-
-        if (!isValidEmail($email)) {
-            $this->setFlash('login', 'Email inválido', 'error');
+        if (empty($username) || empty($pin)) {
+            $this->setFlash('login', 'Por favor ingresa tu usuario y PIN', 'error');
             $this->redirect('auth/login');
         }
 
@@ -67,7 +62,7 @@ class AuthController extends Controller {
         }
 
         // Authenticate user
-        $result = $this->userModel->authenticate($email, $pin);
+        $result = $this->userModel->authenticate($username, $pin);
 
         if ($result === false) {
             $this->setFlash('login', 'Email o PIN incorrectos', 'error');
@@ -176,6 +171,127 @@ class AuthController extends Controller {
 
         $this->setFlash('login', 'Has cerrado sesión correctamente', 'success');
         $this->redirect('auth/login');
+    }
+
+    /**
+     * Show registration form
+     */
+    public function register() {
+        // Redirect if already logged in
+        if (isLoggedIn()) {
+            $this->redirect('');
+        }
+
+        $data = [
+            'title' => 'Registrar Cuenta',
+            'csrf_token' => $this->generateCsrfToken()
+        ];
+
+        $this->viewWithLayout('auth/register', $data, 'auth');
+    }
+
+    /**
+     * Process registration
+     */
+    public function processRegister() {
+        if (!$this->isPost()) {
+            $this->redirect('auth/register');
+        }
+
+        // Validate CSRF token
+        if (!$this->validateCsrfToken()) {
+            $this->setFlash('register', 'Token de seguridad inválido', 'error');
+            $this->redirect('auth/register');
+        }
+
+        // Get form data
+        $username = sanitize($this->getPost('username'));
+        $pin = $this->getPost('pin');
+        $confirmPin = $this->getPost('confirm_pin');
+        $nombre = sanitize($this->getPost('nombre'));
+        $apellidos = sanitize($this->getPost('apellidos'));
+        $email = sanitize($this->getPost('email'));
+        $numeroEmpleado = sanitize($this->getPost('numero_empleado'));
+
+        // Validate inputs
+        if (empty($username) || empty($pin) || empty($confirmPin) || empty($nombre) || empty($apellidos) || empty($numeroEmpleado)) {
+            $this->setFlash('register', 'Por favor completa todos los campos requeridos', 'error');
+            $this->redirect('auth/register');
+        }
+
+        // Validate username format (alphanumeric, underscore, min 3 chars)
+        if (!preg_match('/^[a-zA-Z0-9_]{3,30}$/', $username)) {
+            $this->setFlash('register', 'El nombre de usuario debe tener entre 3 y 30 caracteres alfanuméricos', 'error');
+            $this->redirect('auth/register');
+        }
+
+        // Check if username already exists
+        if ($this->userModel->findByUsername($username)) {
+            $this->setFlash('register', 'Este nombre de usuario ya está en uso', 'error');
+            $this->redirect('auth/register');
+        }
+
+        // Check if employee number already exists
+        if ($this->userModel->findByEmployeeNumber($numeroEmpleado)) {
+            $this->setFlash('register', 'Este número de empleado ya está registrado', 'error');
+            $this->redirect('auth/register');
+        }
+
+        // Validate email if provided
+        if (!empty($email) && !isValidEmail($email)) {
+            $this->setFlash('register', 'El email proporcionado no es válido', 'error');
+            $this->redirect('auth/register');
+        }
+
+        // Check if email already exists (if provided)
+        if (!empty($email) && $this->userModel->findByEmail($email)) {
+            $this->setFlash('register', 'Este email ya está registrado', 'error');
+            $this->redirect('auth/register');
+        }
+
+        // Validate PIN
+        if (!isValidPin($pin)) {
+            $this->setFlash('register', 'El PIN debe ser de 6 dígitos', 'error');
+            $this->redirect('auth/register');
+        }
+
+        // Confirm PIN match
+        if ($pin !== $confirmPin) {
+            $this->setFlash('register', 'Los PINs no coinciden', 'error');
+            $this->redirect('auth/register');
+        }
+
+        // Create user account
+        $userData = [
+            'username' => $username,
+            'pin' => hashPin($pin),
+            'nombre' => $nombre,
+            'apellidos' => $apellidos,
+            'email' => !empty($email) ? $email : null,
+            'numero_empleado' => $numeroEmpleado,
+            'rol' => 'empleado', // Default role
+            'activo' => 1,
+            'email_verificado' => empty($email) ? 1 : 0, // Auto-verify if no email
+            'creado_en' => getCurrentDateTime()
+        ];
+
+        $userId = $this->userModel->create($userData);
+
+        if ($userId) {
+            // If email provided, send verification email
+            if (!empty($email)) {
+                // TODO: Send verification email
+                $this->setFlash('login', 'Cuenta creada exitosamente. Por favor verifica tu email antes de iniciar sesión.', 'success');
+            } else {
+                $this->setFlash('login', 'Cuenta creada exitosamente. Ya puedes iniciar sesión.', 'success');
+            }
+
+            logActivity('user_registered', ['user_id' => $userId, 'username' => $username]);
+            $this->redirect('auth/login');
+        } else {
+            $this->setFlash('register', 'Error al crear la cuenta. Por favor intenta de nuevo.', 'error');
+            $this->redirect('auth/register');
+        }
     }
 
     /**
