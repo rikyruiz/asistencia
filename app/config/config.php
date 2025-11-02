@@ -60,6 +60,9 @@ if (ENVIRONMENT === 'development') {
     ini_set('display_errors', '0');
 }
 
+// Load Composer autoloader
+require_once dirname(dirname(__DIR__)) . '/vendor/autoload.php';
+
 // Autoload function
 spl_autoload_register(function ($class) {
     $paths = [
