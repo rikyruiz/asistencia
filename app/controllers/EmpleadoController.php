@@ -60,10 +60,21 @@ class EmpleadoController extends Controller {
         // Get user's assigned locations for validation
         $locations = $this->userModel->getLocations($userId);
 
+        // Transform location data for JavaScript compatibility
+        $transformedLocations = array_map(function($location) {
+            return [
+                'id' => $location['id'],
+                'name' => $location['nombre'],
+                'lat' => floatval($location['latitud']),
+                'lng' => floatval($location['longitud']),
+                'radius' => intval($location['radio_metros'])
+            ];
+        }, $locations);
+
         $data = [
             'title' => $activeSession ? 'Registrar Salida' : 'Registrar Entrada',
             'activeSession' => $activeSession,
-            'locations' => $locations,
+            'locations' => $transformedLocations,
             'csrf_token' => $this->generateCsrfToken()
         ];
 
