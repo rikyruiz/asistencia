@@ -132,10 +132,10 @@ class EmpleadoController extends Controller {
             $this->json(['error' => 'No estás asignado a esta ubicación'], 403);
         }
 
-        // Check if location is open
-        if (!$this->locationModel->isOpen($location['id'])) {
-            $this->json(['error' => 'La ubicación está fuera del horario laboral'], 400);
-        }
+        // Check if location is open - TEMPORARILY DISABLED
+        // if (!$this->locationModel->isOpen($location['id'])) {
+        //     $this->json(['error' => 'La ubicación está fuera del horario laboral'], 400);
+        // }
 
         // Process clock in
         $result = $this->attendanceModel->clockIn(
