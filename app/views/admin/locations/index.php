@@ -134,7 +134,7 @@
 <!-- Location Details Modal -->
 <div id="locationModal" class="fixed inset-0 bg-gray-500 bg-opacity-75 hidden z-50">
     <div class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div class="p-6">
                 <div class="flex justify-between items-start mb-4">
                     <h3 class="text-xl font-semibold text-gray-900" id="modalTitle">Detalles de Ubicación</h3>
@@ -150,7 +150,13 @@
     </div>
 </div>
 
+<!-- Leaflet CSS for OpenStreetMap -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 <script>
+let locationMap = null;
+
 function viewLocationDetails(id) {
     // Show modal
     document.getElementById('locationModal').classList.remove('hidden');
@@ -170,49 +176,63 @@ function viewLocationDetails(id) {
             return;
         }
 
-        // Build content
+        // Build content with map
         let content = `
             <div class="space-y-4">
+                <!-- Map Section -->
                 <div>
-                    <h4 class="font-medium text-gray-900 mb-2">Información General</h4>
-                    <dl class="grid grid-cols-2 gap-4">
-                        <div>
-                            <dt class="text-sm text-gray-500">Nombre</dt>
-                            <dd class="text-sm font-medium text-gray-900">${data.nombre}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm text-gray-500">Código</dt>
-                            <dd class="text-sm font-medium text-gray-900">${data.codigo || 'N/A'}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm text-gray-500">Tipo</dt>
-                            <dd class="text-sm font-medium text-gray-900 capitalize">${data.tipo_ubicacion}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm text-gray-500">Estado</dt>
-                            <dd class="text-sm font-medium ${data.activa ? 'text-green-600' : 'text-red-600'}">
-                                ${data.activa ? 'Activa' : 'Inactiva'}
-                            </dd>
-                        </div>
-                    </dl>
+                    <h4 class="font-medium text-gray-900 mb-2">
+                        <i class="fas fa-map-marked-alt mr-2 text-navy"></i>Ubicación en Mapa
+                    </h4>
+                    <div id="locationMap" class="w-full h-64 rounded-lg border border-gray-300"></div>
+                    <p class="text-xs text-gray-500 mt-2">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        El círculo azul representa el área de geofence (${data.radio_metros}m de radio)
+                    </p>
                 </div>
 
-                <div>
-                    <h4 class="font-medium text-gray-900 mb-2">Ubicación</h4>
-                    <dl class="space-y-2">
-                        <div>
-                            <dt class="text-sm text-gray-500">Dirección</dt>
-                            <dd class="text-sm text-gray-900">${data.direccion || 'No especificada'}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm text-gray-500">Coordenadas</dt>
-                            <dd class="text-sm font-mono text-gray-900">${data.latitud}, ${data.longitud}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm text-gray-500">Radio de geofence</dt>
-                            <dd class="text-sm text-gray-900">${data.radio_metros} metros</dd>
-                        </div>
-                    </dl>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="font-medium text-gray-900 mb-2">Información General</h4>
+                        <dl class="space-y-2">
+                            <div>
+                                <dt class="text-sm text-gray-500">Nombre</dt>
+                                <dd class="text-sm font-medium text-gray-900">${data.nombre}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm text-gray-500">Código</dt>
+                                <dd class="text-sm font-medium text-gray-900">${data.codigo || 'N/A'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm text-gray-500">Tipo</dt>
+                                <dd class="text-sm font-medium text-gray-900 capitalize">${data.tipo_ubicacion}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm text-gray-500">Estado</dt>
+                                <dd class="text-sm font-medium ${data.activa ? 'text-green-600' : 'text-red-600'}">
+                                    ${data.activa ? 'Activa' : 'Inactiva'}
+                                </dd>
+                            </div>
+                        </dl>
+                    </div>
+
+                    <div>
+                        <h4 class="font-medium text-gray-900 mb-2">Ubicación</h4>
+                        <dl class="space-y-2">
+                            <div>
+                                <dt class="text-sm text-gray-500">Dirección</dt>
+                                <dd class="text-sm text-gray-900">${data.direccion || 'No especificada'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm text-gray-500">Coordenadas</dt>
+                                <dd class="text-sm font-mono text-gray-900">${data.latitud}, ${data.longitud}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm text-gray-500">Radio de geofence</dt>
+                                <dd class="text-sm text-gray-900">${data.radio_metros} metros</dd>
+                            </div>
+                        </dl>
+                    </div>
                 </div>
 
                 <div>
@@ -256,6 +276,11 @@ function viewLocationDetails(id) {
         `;
 
         document.getElementById('modalContent').innerHTML = content;
+
+        // Initialize map after content is loaded
+        setTimeout(() => {
+            initializeMap(data.latitud, data.longitud, data.radio_metros, data.nombre);
+        }, 100);
     })
     .catch(error => {
         console.error('Error:', error);
@@ -263,8 +288,41 @@ function viewLocationDetails(id) {
     });
 }
 
+function initializeMap(lat, lng, radius, locationName) {
+    // Remove previous map if exists
+    if (locationMap) {
+        locationMap.remove();
+    }
+
+    // Create map
+    locationMap = L.map('locationMap').setView([lat, lng], 16);
+
+    // Add OpenStreetMap tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19
+    }).addTo(locationMap);
+
+    // Add marker for location
+    const marker = L.marker([lat, lng]).addTo(locationMap);
+    marker.bindPopup(`<strong>${locationName}</strong><br>Lat: ${lat}<br>Lng: ${lng}`).openPopup();
+
+    // Add circle for geofence
+    L.circle([lat, lng], {
+        color: '#003366',
+        fillColor: '#003366',
+        fillOpacity: 0.2,
+        radius: radius
+    }).addTo(locationMap);
+}
+
 function closeModal() {
     document.getElementById('locationModal').classList.add('hidden');
+    // Clean up map
+    if (locationMap) {
+        locationMap.remove();
+        locationMap = null;
+    }
 }
 
 function deleteLocation(id, name) {
