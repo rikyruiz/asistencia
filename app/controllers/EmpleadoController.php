@@ -85,149 +85,189 @@ class EmpleadoController extends Controller {
      * Process Clock In (AJAX)
      */
     public function clockIn() {
-        if (!$this->isPost() || !$this->isAjax()) {
-            $this->json(['error' => 'Método no permitido'], 405);
-        }
+        try {
+            if (!$this->isPost() || !$this->isAjax()) {
+                $this->json(['error' => 'Método no permitido'], 405);
+                return;
+            }
 
-        if (!$this->validateCsrfToken()) {
-            $this->json(['error' => 'Token de seguridad inválido'], 403);
-        }
+            if (!$this->validateCsrfToken()) {
+                logError('CSRF token validation failed for clockIn', ['user_id' => getUserId()]);
+                $this->json(['error' => 'Token de seguridad inválido'], 403);
+                return;
+            }
 
         $userId = getUserId();
         $lat = floatval($this->getPost('lat'));
         $lng = floatval($this->getPost('lng'));
         $accuracy = floatval($this->getPost('accuracy'));
 
-        // Validate coordinates
-        if (!$lat || !$lng) {
-            $this->json(['error' => 'Coordenadas inválidas'], 400);
-        }
+            // Validate coordinates
+            if (!$lat || !$lng) {
+                $this->json(['error' => 'Coordenadas inválidas'], 400);
+                return;
+            }
 
-        // Find the location based on coordinates
-        $location = $this->locationModel->findLocationByCoordinates($lat, $lng);
+            // Find the location based on coordinates
+            $location = $this->locationModel->findLocationByCoordinates($lat, $lng);
 
-        if (!$location) {
-            // Get nearest location for reference
-            $nearest = $this->locationModel->getNearestLocation($lat, $lng);
+            if (!$location) {
+                // Get nearest location for reference
+                $nearest = $this->locationModel->getNearestLocation($lat, $lng);
+                $this->json([
+                    'error' => 'No estás dentro de ninguna ubicación autorizada',
+                    'nearest' => $nearest ? [
+                        'name' => $nearest['nombre'],
+                        'distance' => $nearest['distancia']
+                    ] : null
+                ], 400);
+                return;
+            }
+
+            // Check if user is assigned to this location
+            $userLocations = $this->userModel->getLocations($userId);
+            $isAssigned = false;
+            foreach ($userLocations as $loc) {
+                if ($loc['id'] == $location['id']) {
+                    $isAssigned = true;
+                    break;
+                }
+            }
+
+            if (!$isAssigned) {
+                $this->json(['error' => 'No estás asignado a esta ubicación'], 403);
+                return;
+            }
+
+            // Check if location is open - TEMPORARILY DISABLED
+            // if (!$this->locationModel->isOpen($location['id'])) {
+            //     $this->json(['error' => 'La ubicación está fuera del horario laboral'], 400);
+            //     return;
+            // }
+
+            // Process clock in
+            $result = $this->attendanceModel->clockIn(
+                $userId,
+                $location['id'],
+                $lat,
+                $lng,
+                $accuracy,
+                true, // within geofence (already validated)
+                $location['distancia']
+            );
+
+            if (isset($result['error'])) {
+                $errorMsg = 'Error al registrar entrada';
+                if ($result['error'] === 'active_session_exists') {
+                    $errorMsg = 'Ya tienes una sesión activa. Debes registrar salida primero.';
+                }
+                logError('Clock in failed', [
+                    'user_id' => $userId,
+                    'error' => $result['error'],
+                    'message' => $result['message'] ?? ''
+                ]);
+                $this->json(['error' => $errorMsg], 400);
+                return;
+            }
+
             $this->json([
-                'error' => 'No estás dentro de ninguna ubicación autorizada',
-                'nearest' => $nearest ? [
-                    'name' => $nearest['nombre'],
-                    'distance' => $nearest['distancia']
-                ] : null
-            ], 400);
+                'success' => true,
+                'message' => 'Entrada registrada correctamente',
+                'location' => $location['nombre'],
+                'time' => formatDateTime(getCurrentDateTime(), 'H:i'),
+                'session_id' => $result['session_id']
+            ]);
+        } catch (Exception $e) {
+            logError('Unexpected error in clockIn', [
+                'user_id' => getUserId(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            $this->json(['error' => 'Error inesperado al registrar entrada. Por favor, intenta nuevamente.'], 500);
         }
-
-        // Check if user is assigned to this location
-        $userLocations = $this->userModel->getLocations($userId);
-        $isAssigned = false;
-        foreach ($userLocations as $loc) {
-            if ($loc['id'] == $location['id']) {
-                $isAssigned = true;
-                break;
-            }
-        }
-
-        if (!$isAssigned) {
-            $this->json(['error' => 'No estás asignado a esta ubicación'], 403);
-        }
-
-        // Check if location is open - TEMPORARILY DISABLED
-        // if (!$this->locationModel->isOpen($location['id'])) {
-        //     $this->json(['error' => 'La ubicación está fuera del horario laboral'], 400);
-        // }
-
-        // Process clock in
-        $result = $this->attendanceModel->clockIn(
-            $userId,
-            $location['id'],
-            $lat,
-            $lng,
-            $accuracy,
-            true, // within geofence (already validated)
-            $location['distancia']
-        );
-
-        if (isset($result['error'])) {
-            $errorMsg = 'Error al registrar entrada';
-            if ($result['error'] === 'active_session_exists') {
-                $errorMsg = 'Ya tienes una sesión activa. Debes registrar salida primero.';
-            }
-            $this->json(['error' => $errorMsg], 400);
-        }
-
-        $this->json([
-            'success' => true,
-            'message' => 'Entrada registrada correctamente',
-            'location' => $location['nombre'],
-            'time' => formatDateTime(getCurrentDateTime(), 'H:i'),
-            'session_id' => $result['session_id']
-        ]);
     }
 
     /**
      * Process Clock Out (AJAX)
      */
     public function clockOut() {
-        if (!$this->isPost() || !$this->isAjax()) {
-            $this->json(['error' => 'Método no permitido'], 405);
-        }
+        try {
+            if (!$this->isPost() || !$this->isAjax()) {
+                $this->json(['error' => 'Método no permitido'], 405);
+                return;
+            }
 
-        if (!$this->validateCsrfToken()) {
-            $this->json(['error' => 'Token de seguridad inválido'], 403);
-        }
+            if (!$this->validateCsrfToken()) {
+                logError('CSRF token validation failed for clockOut', ['user_id' => getUserId()]);
+                $this->json(['error' => 'Token de seguridad inválido'], 403);
+                return;
+            }
 
-        $userId = getUserId();
-        $lat = floatval($this->getPost('lat'));
-        $lng = floatval($this->getPost('lng'));
-        $accuracy = floatval($this->getPost('accuracy'));
+            $userId = getUserId();
+            $lat = floatval($this->getPost('lat'));
+            $lng = floatval($this->getPost('lng'));
+            $accuracy = floatval($this->getPost('accuracy'));
 
-        // Clock out is allowed from anywhere, but we still record the location
-        $location = null;
-        $withinGeofence = false;
-        $distance = null;
+            // Clock out is allowed from anywhere, but we still record the location
+            $location = null;
+            $withinGeofence = false;
+            $distance = null;
 
-        if ($lat && $lng) {
-            $location = $this->locationModel->findLocationByCoordinates($lat, $lng);
-            if ($location) {
-                $withinGeofence = true;
-                $distance = $location['distancia'];
-            } else {
-                // Get nearest for reference
-                $nearest = $this->locationModel->getNearestLocation($lat, $lng);
-                if ($nearest) {
-                    $distance = $nearest['distancia'];
+            if ($lat && $lng) {
+                $location = $this->locationModel->findLocationByCoordinates($lat, $lng);
+                if ($location) {
+                    $withinGeofence = true;
+                    $distance = $location['distancia'];
+                } else {
+                    // Get nearest for reference
+                    $nearest = $this->locationModel->getNearestLocation($lat, $lng);
+                    if ($nearest) {
+                        $distance = $nearest['distancia'];
+                    }
                 }
             }
-        }
 
-        // Process clock out
-        $result = $this->attendanceModel->clockOut(
-            $userId,
-            $location ? $location['id'] : null,
-            $lat,
-            $lng,
-            $accuracy,
-            $withinGeofence,
-            $distance
-        );
+            // Process clock out
+            $result = $this->attendanceModel->clockOut(
+                $userId,
+                $location ? $location['id'] : null,
+                $lat,
+                $lng,
+                $accuracy,
+                $withinGeofence,
+                $distance
+            );
 
-        if (isset($result['error'])) {
-            $errorMsg = 'Error al registrar salida';
-            if ($result['error'] === 'no_active_session') {
-                $errorMsg = 'No tienes una sesión activa para cerrar.';
+            if (isset($result['error'])) {
+                $errorMsg = 'Error al registrar salida';
+                if ($result['error'] === 'no_active_session') {
+                    $errorMsg = 'No tienes una sesión activa para cerrar.';
+                }
+                logError('Clock out failed', [
+                    'user_id' => $userId,
+                    'error' => $result['error'],
+                    'message' => $result['message'] ?? ''
+                ]);
+                $this->json(['error' => $errorMsg], 400);
+                return;
             }
-            $this->json(['error' => $errorMsg], 400);
-        }
 
-        $this->json([
-            'success' => true,
-            'message' => 'Salida registrada correctamente',
-            'location' => $location ? $location['nombre'] : 'Fuera de ubicación autorizada',
-            'time' => formatDateTime(getCurrentDateTime(), 'H:i'),
-            'duration' => $result['duration']['formatted'],
-            'within_geofence' => $withinGeofence
-        ]);
+            $this->json([
+                'success' => true,
+                'message' => 'Salida registrada correctamente',
+                'location' => $location ? $location['nombre'] : 'Fuera de ubicación autorizada',
+                'time' => formatDateTime(getCurrentDateTime(), 'H:i'),
+                'duration' => $result['duration']['formatted'],
+                'within_geofence' => $withinGeofence
+            ]);
+        } catch (Exception $e) {
+            logError('Unexpected error in clockOut', [
+                'user_id' => getUserId(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            $this->json(['error' => 'Error inesperado al registrar salida. Por favor, intenta nuevamente.'], 500);
+        }
     }
 
     /**

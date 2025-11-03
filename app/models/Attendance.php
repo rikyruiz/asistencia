@@ -5,6 +5,7 @@
 class Attendance extends Model {
     protected $table = 'registros_asistencia';
     protected $primaryKey = 'id';
+    protected $timestamps = false; // Table uses creado_en with DEFAULT CURRENT_TIMESTAMP
     protected $fillable = [
         'usuario_id', 'ubicacion_id', 'tipo', 'fecha_hora',
         'latitud_registro', 'longitud_registro', 'precision_gps',
@@ -302,5 +303,167 @@ class Attendance extends Model {
         $sql .= " ORDER BY ra.fecha_hora";
 
         return $this->db->select($sql, $params);
+    }
+
+    /**
+     * Get incomplete sessions (missing clock-out)
+     */
+    public function getIncompleteSessions($startDate = null, $endDate = null, $userId = null, $locationId = null) {
+        if (!$startDate) $startDate = date('Y-m-d', strtotime('-30 days'));
+        if (!$endDate) $endDate = getCurrentDate();
+
+        $params = [
+            'start_date' => $startDate,
+            'end_date' => $endDate
+        ];
+
+        $sql = "SELECT
+                    st.id as session_id,
+                    st.hora_entrada,
+                    st.ubicacion_id,
+                    st.estado,
+                    u.id as usuario_id,
+                    u.nombre,
+                    u.apellidos,
+                    u.numero_empleado,
+                    u.email,
+                    ub.nombre as ubicacion_nombre,
+                    ra.latitud_registro,
+                    ra.longitud_registro,
+                    ra.precision_gps,
+                    TIMESTAMPDIFF(HOUR, st.hora_entrada, NOW()) as horas_transcurridas,
+                    DATE(st.hora_entrada) as fecha_entrada
+                FROM sesiones_trabajo st
+                JOIN usuarios u ON st.usuario_id = u.id
+                LEFT JOIN ubicaciones ub ON st.ubicacion_id = ub.id
+                LEFT JOIN registros_asistencia ra ON st.entrada_id = ra.id
+                WHERE st.estado = 'activa'
+                    AND DATE(st.hora_entrada) BETWEEN :start_date AND :end_date";
+
+        if ($userId) {
+            $sql .= " AND st.usuario_id = :user_id";
+            $params['user_id'] = $userId;
+        }
+
+        if ($locationId) {
+            $sql .= " AND st.ubicacion_id = :location_id";
+            $params['location_id'] = $locationId;
+        }
+
+        $sql .= " ORDER BY st.hora_entrada DESC";
+
+        return $this->db->select($sql, $params);
+    }
+
+    /**
+     * Get geofence violations (clock-outs from outside authorized locations)
+     */
+    public function getGeofenceViolations($startDate = null, $endDate = null, $userId = null, $locationId = null) {
+        if (!$startDate) $startDate = date('Y-m-d', strtotime('-30 days'));
+        if (!$endDate) $endDate = getCurrentDate();
+
+        $params = [
+            'start_date' => $startDate,
+            'end_date' => $endDate
+        ];
+
+        $sql = "SELECT
+                    ra.id,
+                    ra.fecha_hora,
+                    ra.tipo,
+                    ra.latitud_registro,
+                    ra.longitud_registro,
+                    ra.precision_gps,
+                    ra.dentro_geofence,
+                    ra.distancia_ubicacion,
+                    u.id as usuario_id,
+                    u.nombre,
+                    u.apellidos,
+                    u.numero_empleado,
+                    u.email,
+                    ub.nombre as ubicacion_nombre,
+                    ub.latitud as ubicacion_lat,
+                    ub.longitud as ubicacion_lng,
+                    ub.radio_metros,
+                    st.duracion_minutos,
+                    DATE(ra.fecha_hora) as fecha_registro
+                FROM registros_asistencia ra
+                JOIN usuarios u ON ra.usuario_id = u.id
+                LEFT JOIN ubicaciones ub ON ra.ubicacion_id = ub.id
+                LEFT JOIN sesiones_trabajo st ON
+                    (ra.tipo = 'salida' AND st.salida_id = ra.id)
+                WHERE ra.dentro_geofence = 0
+                    AND ra.tipo = 'salida'
+                    AND ra.fecha_local BETWEEN :start_date AND :end_date";
+
+        if ($userId) {
+            $sql .= " AND ra.usuario_id = :user_id";
+            $params['user_id'] = $userId;
+        }
+
+        if ($locationId) {
+            $sql .= " AND ra.ubicacion_id = :location_id";
+            $params['location_id'] = $locationId;
+        }
+
+        $sql .= " ORDER BY ra.fecha_hora DESC";
+
+        return $this->db->select($sql, $params);
+    }
+
+    /**
+     * Get KPI statistics for dashboard
+     */
+    public function getKPIStats($date = null) {
+        if (!$date) $date = getCurrentDate();
+
+        $stats = [];
+
+        // Active sessions count
+        $activeSql = "SELECT COUNT(*) as count FROM sesiones_trabajo WHERE estado = 'activa'";
+        $active = $this->db->selectOne($activeSql);
+        $stats['active_sessions'] = $active['count'];
+
+        // Incomplete sessions today (forgot to clock out yesterday or earlier)
+        $incompleteSql = "SELECT COUNT(*) as count
+                         FROM sesiones_trabajo
+                         WHERE estado = 'activa'
+                         AND DATE(hora_entrada) < :date";
+        $incomplete = $this->db->selectOne($incompleteSql, ['date' => $date]);
+        $stats['incomplete_sessions'] = $incomplete['count'];
+
+        // Geofence violations today
+        $violationsSql = "SELECT COUNT(*) as count
+                         FROM registros_asistencia
+                         WHERE dentro_geofence = 0
+                         AND tipo = 'salida'
+                         AND fecha_local = :date";
+        $violations = $this->db->selectOne($violationsSql, ['date' => $date]);
+        $stats['geofence_violations_today'] = $violations['count'];
+
+        // Total clock-ins today
+        $clockInsSql = "SELECT COUNT(*) as count
+                       FROM registros_asistencia
+                       WHERE tipo = 'entrada'
+                       AND fecha_local = :date";
+        $clockIns = $this->db->selectOne($clockInsSql, ['date' => $date]);
+        $stats['clock_ins_today'] = $clockIns['count'];
+
+        // Total clock-outs today
+        $clockOutsSql = "SELECT COUNT(*) as count
+                        FROM registros_asistencia
+                        WHERE tipo = 'salida'
+                        AND fecha_local = :date";
+        $clockOuts = $this->db->selectOne($clockOutsSql, ['date' => $date]);
+        $stats['clock_outs_today'] = $clockOuts['count'];
+
+        // Unique employees today
+        $employeesSql = "SELECT COUNT(DISTINCT usuario_id) as count
+                        FROM registros_asistencia
+                        WHERE fecha_local = :date";
+        $employees = $this->db->selectOne($employeesSql, ['date' => $date]);
+        $stats['employees_today'] = $employees['count'];
+
+        return $stats;
     }
 }

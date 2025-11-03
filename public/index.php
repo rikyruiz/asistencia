@@ -4,6 +4,9 @@
  * This is the entry point for all requests
  */
 
+// Start output buffering to prevent any accidental output before headers
+ob_start();
+
 // Load configuration
 require_once '../app/config/config.php';
 

@@ -79,7 +79,7 @@
     </div>
 
     <!-- Report Types -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
         <!-- Attendance Report -->
         <div class="bg-white rounded-xl shadow hover:shadow-lg transition-shadow cursor-pointer"
              onclick="generateReport('attendance')">
@@ -133,6 +133,44 @@
                 </button>
             </div>
         </div>
+
+        <!-- Incomplete Sessions Report (Missing Clock-Out) -->
+        <div class="bg-white rounded-xl shadow hover:shadow-lg transition-shadow cursor-pointer border-2 border-orange-200"
+             onclick="generateReport('incomplete')">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-exclamation-triangle text-orange-600 text-xl"></i>
+                    </div>
+                    <span class="px-2 py-1 bg-orange-100 text-orange-800 text-xs font-semibold rounded-full">KPI</span>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Salidas Faltantes</h3>
+                <p class="text-sm text-gray-600 mb-4">Empleados que olvidaron registrar salida (sesiones incompletas)</p>
+                <button onclick="generateReport('incomplete')"
+                        class="w-full px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors">
+                    <i class="fas fa-file-download mr-2"></i>Generar
+                </button>
+            </div>
+        </div>
+
+        <!-- Geofence Violations Report -->
+        <div class="bg-white rounded-xl shadow hover:shadow-lg transition-shadow cursor-pointer border-2 border-red-200"
+             onclick="generateReport('violations')">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-map-marked-alt text-red-600 text-xl"></i>
+                    </div>
+                    <span class="px-2 py-1 bg-red-100 text-red-800 text-xs font-semibold rounded-full">KPI</span>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Violaciones de Geovalla</h3>
+                <p class="text-sm text-gray-600 mb-4">Salidas registradas fuera de ubicaciones autorizadas</p>
+                <button onclick="generateReport('violations')"
+                        class="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                    <i class="fas fa-file-download mr-2"></i>Generar
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- Export Options -->
@@ -166,36 +204,124 @@
                 </div>
             </div>
         </div>
-        <div class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <p class="text-sm text-yellow-800">
-                <i class="fas fa-info-circle mr-2"></i>
-                <strong>Próximamente:</strong> La funcionalidad de exportación estará disponible en la próxima actualización.
+    </div>
+</div>
+
+<!-- Export Format Modal -->
+<div id="exportModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+    <div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-4">
+        <div class="p-6 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-gray-900">
+                    <i class="fas fa-download mr-2 text-navy"></i>
+                    Exportar Reporte
+                </h3>
+                <button onclick="closeExportModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+        </div>
+        <div class="p-6">
+            <p class="text-sm text-gray-600 mb-4">
+                Selecciona el formato en el que deseas exportar el reporte:
             </p>
+            <div class="space-y-3">
+                <!-- PDF -->
+                <button onclick="exportReport('pdf')"
+                        class="w-full flex items-center p-4 border-2 border-gray-200 rounded-lg hover:border-red-500 hover:bg-red-50 transition-colors group">
+                    <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mr-4 group-hover:bg-red-200">
+                        <i class="fas fa-file-pdf text-red-600 text-2xl"></i>
+                    </div>
+                    <div class="flex-1 text-left">
+                        <p class="font-semibold text-gray-900">Exportar como PDF</p>
+                        <p class="text-xs text-gray-500">Formato de impresión profesional</p>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-400 group-hover:text-red-600"></i>
+                </button>
+
+                <!-- Excel -->
+                <button onclick="exportReport('excel')"
+                        class="w-full flex items-center p-4 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors group">
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4 group-hover:bg-green-200">
+                        <i class="fas fa-file-excel text-green-600 text-2xl"></i>
+                    </div>
+                    <div class="flex-1 text-left">
+                        <p class="font-semibold text-gray-900">Exportar como Excel</p>
+                        <p class="text-xs text-gray-500">Formato editable con fórmulas</p>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-400 group-hover:text-green-600"></i>
+                </button>
+
+                <!-- CSV -->
+                <button onclick="exportReport('csv')"
+                        class="w-full flex items-center p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors group">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4 group-hover:bg-blue-200">
+                        <i class="fas fa-file-csv text-blue-600 text-2xl"></i>
+                    </div>
+                    <div class="flex-1 text-left">
+                        <p class="font-semibold text-gray-900">Exportar como CSV</p>
+                        <p class="text-xs text-gray-500">Datos sin formato para análisis</p>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-400 group-hover:text-blue-600"></i>
+                </button>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
+let currentReportType = null;
+
 function generateReport(type) {
+    currentReportType = type;
+    document.getElementById('exportModal').classList.remove('hidden');
+}
+
+function closeExportModal() {
+    document.getElementById('exportModal').classList.add('hidden');
+    currentReportType = null;
+}
+
+function exportReport(format) {
     const startDate = document.getElementById('start_date').value;
     const endDate = document.getElementById('end_date').value;
     const userId = document.getElementById('user_id').value;
     const locationId = document.getElementById('location_id').value;
 
+    if (!startDate || !endDate) {
+        alert('Por favor selecciona las fechas de inicio y fin');
+        return;
+    }
+
     // Build query string
     const params = new URLSearchParams({
         start_date: startDate,
         end_date: endDate,
-        type: type
+        type: currentReportType,
+        format: format
     });
 
     if (userId) params.append('user_id', userId);
     if (locationId) params.append('location_id', locationId);
 
-    // For now, show a message that export is coming soon
-    alert('Funcionalidad de exportación próximamente.\n\nTipo: ' + type.toUpperCase() + '\nFecha: ' + startDate + ' a ' + endDate);
+    // Redirect to generate report
+    window.location.href = `<?= url('admin/generateReport') ?>?${params.toString()}`;
 
-    // TODO: Implement actual report generation
-    // window.location.href = `<?= url('admin/generateReport') ?>?${params.toString()}`;
+    // Close modal
+    closeExportModal();
 }
+
+// Close modal on escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeExportModal();
+    }
+});
+
+// Close modal when clicking outside
+document.getElementById('exportModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeExportModal();
+    }
+});
 </script>

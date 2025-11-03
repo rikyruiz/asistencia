@@ -74,6 +74,73 @@
         </div>
     </div>
 
+    <!-- KPI Alert Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <!-- Incomplete Sessions Alert -->
+        <div class="bg-gradient-to-r from-orange-50 to-orange-100 rounded-xl shadow border-l-4 border-orange-500 p-6">
+            <div class="flex items-start justify-between">
+                <div class="flex-1">
+                    <div class="flex items-center mb-2">
+                        <div class="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center mr-3">
+                            <i class="fas fa-exclamation-triangle text-white text-lg"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">Salidas Faltantes</h3>
+                            <p class="text-xs text-gray-600">Sesiones sin cerrar</p>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <p class="text-4xl font-bold text-orange-600">
+                            <?= $kpiStats['incomplete_sessions'] ?? 0 ?>
+                        </p>
+                        <p class="text-sm text-gray-700 mt-2">
+                            Empleados que olvidaron registrar salida
+                        </p>
+                    </div>
+                    <div class="mt-4">
+                        <a href="<?= url('admin/reports') ?>"
+                           class="inline-flex items-center px-4 py-2 bg-orange-600 text-white text-sm font-medium rounded-lg hover:bg-orange-700 transition-colors">
+                            <i class="fas fa-file-alt mr-2"></i>
+                            Ver Reporte Detallado
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Geofence Violations Alert -->
+        <div class="bg-gradient-to-r from-red-50 to-red-100 rounded-xl shadow border-l-4 border-red-500 p-6">
+            <div class="flex items-start justify-between">
+                <div class="flex-1">
+                    <div class="flex items-center mb-2">
+                        <div class="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center mr-3">
+                            <i class="fas fa-map-marked-alt text-white text-lg"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">Violaciones de Geovalla</h3>
+                            <p class="text-xs text-gray-600">Hoy</p>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <p class="text-4xl font-bold text-red-600">
+                            <?= $kpiStats['geofence_violations_today'] ?? 0 ?>
+                        </p>
+                        <p class="text-sm text-gray-700 mt-2">
+                            Salidas fuera de ubicaciones autorizadas
+                        </p>
+                    </div>
+                    <div class="mt-4">
+                        <a href="<?= url('admin/reports') ?>"
+                           class="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors">
+                            <i class="fas fa-file-alt mr-2"></i>
+                            Ver Reporte Detallado
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <!-- Active Sessions -->
         <div class="lg:col-span-2 bg-white rounded-xl shadow">

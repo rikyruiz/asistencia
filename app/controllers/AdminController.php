@@ -23,6 +23,9 @@ class AdminController extends Controller {
         // Get today's statistics
         $todayStats = $this->attendanceModel->getDailySummary(getCurrentDate());
 
+        // Get KPI statistics
+        $kpiStats = $this->attendanceModel->getKPIStats(getCurrentDate());
+
         // Get active sessions
         $activeSessions = $this->getActiveSessions();
 
@@ -42,6 +45,7 @@ class AdminController extends Controller {
         $data = [
             'title' => 'Dashboard Administrativo',
             'todayStats' => $todayStats,
+            'kpiStats' => $kpiStats,
             'activeSessions' => $activeSessions,
             'weekStats' => $weekStats,
             'locationStats' => $locationStats,
@@ -653,5 +657,227 @@ class AdminController extends Controller {
         ];
 
         $this->viewWithLayout('admin/reports/index', $data, 'main');
+    }
+
+    /**
+     * Generate and export report
+     */
+    public function generateReport() {
+        $type = $this->getGet('type'); // attendance, summary, location, incomplete, violations
+        $format = $this->getGet('format', 'pdf'); // pdf, excel, csv
+        $startDate = $this->getGet('start_date', date('Y-m-01'));
+        $endDate = $this->getGet('end_date', date('Y-m-d'));
+        $userId = $this->getGet('user_id');
+        $locationId = $this->getGet('location_id');
+
+        if (!in_array($type, ['attendance', 'summary', 'location', 'incomplete', 'violations'])) {
+            $this->setFlash('error', 'Tipo de reporte inválido', 'error');
+            $this->redirect('admin/reports');
+        }
+
+        if (!in_array($format, ['pdf', 'excel', 'csv'])) {
+            $this->setFlash('error', 'Formato de exportación inválido', 'error');
+            $this->redirect('admin/reports');
+        }
+
+        // Load ReportExporter
+        require_once __DIR__ . '/../helpers/ReportExporter.php';
+
+        try {
+            switch ($type) {
+                case 'attendance':
+                    $this->exportAttendanceReport($startDate, $endDate, $userId, $locationId, $format);
+                    break;
+                case 'summary':
+                    $this->exportSummaryReport($startDate, $endDate, $userId, $locationId, $format);
+                    break;
+                case 'location':
+                    $this->exportLocationReport($startDate, $endDate, $locationId, $format);
+                    break;
+                case 'incomplete':
+                    $this->exportIncompleteSessionsReport($startDate, $endDate, $userId, $locationId, $format);
+                    break;
+                case 'violations':
+                    $this->exportGeofenceViolationsReport($startDate, $endDate, $userId, $locationId, $format);
+                    break;
+            }
+        } catch (Exception $e) {
+            logError('Report generation failed: ' . $e->getMessage());
+            $this->setFlash('error', 'Error al generar el reporte: ' . $e->getMessage(), 'error');
+            $this->redirect('admin/reports');
+        }
+    }
+
+    /**
+     * Export attendance report
+     */
+    private function exportAttendanceReport($startDate, $endDate, $userId, $locationId, $format) {
+        // Get attendance data
+        $data = $this->attendanceModel->getByDateRange($startDate, $endDate, $locationId);
+
+        // Filter by user if specified
+        if ($userId) {
+            $data = array_filter($data, function($record) use ($userId) {
+                return $record['usuario_id'] == $userId;
+            });
+        }
+
+        // Prepare filters info for report
+        $filters = [
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'user_name' => null,
+            'location_name' => null
+        ];
+
+        if ($userId) {
+            $user = $this->userModel->find($userId);
+            $filters['user_name'] = $user ? $user['nombre'] . ' ' . $user['apellidos'] : null;
+        }
+
+        if ($locationId) {
+            $location = $this->locationModel->find($locationId);
+            $filters['location_name'] = $location ? $location['nombre'] : null;
+        }
+
+        // Add duration to records
+        $sessions = [];
+        $sql = "SELECT entrada_id, salida_id, duracion_minutos FROM sesiones_trabajo WHERE estado = 'completada'";
+        $completedSessions = $this->attendanceModel->raw($sql);
+
+        foreach ($completedSessions as $session) {
+            $sessions[$session['entrada_id']] = $session['duracion_minutos'];
+            $sessions[$session['salida_id']] = $session['duracion_minutos'];
+        }
+
+        foreach ($data as &$record) {
+            $record['duracion_minutos'] = $sessions[$record['id']] ?? null;
+        }
+
+        ReportExporter::exportAttendanceReport($data, $filters, $format);
+    }
+
+    /**
+     * Export summary report
+     */
+    private function exportSummaryReport($startDate, $endDate, $userId, $locationId, $format) {
+        // Build query to get summary data
+        $params = [
+            'start_date' => $startDate,
+            'end_date' => $endDate
+        ];
+
+        $sql = "SELECT
+                    u.id as usuario_id,
+                    u.nombre,
+                    u.apellidos,
+                    u.numero_empleado,
+                    COUNT(DISTINCT DATE(st.hora_entrada)) as dias_trabajados,
+                    COALESCE(SUM(st.duracion_minutos), 0) as total_minutos
+                FROM usuarios u
+                LEFT JOIN sesiones_trabajo st ON u.id = st.usuario_id
+                    AND st.estado = 'completada'
+                    AND DATE(st.hora_entrada) BETWEEN :start_date AND :end_date";
+
+        $conditions = [];
+
+        if ($userId) {
+            $conditions[] = "u.id = :user_id";
+            $params['user_id'] = $userId;
+        }
+
+        if ($locationId) {
+            $conditions[] = "st.ubicacion_id = :location_id";
+            $params['location_id'] = $locationId;
+        }
+
+        if (!empty($conditions)) {
+            $sql .= " AND " . implode(' AND ', $conditions);
+        }
+
+        $sql .= " GROUP BY u.id, u.nombre, u.apellidos, u.numero_empleado
+                  HAVING dias_trabajados > 0
+                  ORDER BY u.nombre, u.apellidos";
+
+        $data = $this->attendanceModel->raw($sql, $params);
+
+        $filters = [
+            'start_date' => $startDate,
+            'end_date' => $endDate
+        ];
+
+        ReportExporter::exportSummaryReport($data, $filters, $format);
+    }
+
+    /**
+     * Export location report
+     */
+    private function exportLocationReport($startDate, $endDate, $locationId, $format) {
+        $params = [
+            'start_date' => $startDate,
+            'end_date' => $endDate
+        ];
+
+        $sql = "SELECT
+                    l.id as ubicacion_id,
+                    l.nombre as ubicacion_nombre,
+                    COUNT(CASE WHEN ra.tipo = 'entrada' THEN 1 END) as total_entradas,
+                    COUNT(CASE WHEN ra.tipo = 'salida' THEN 1 END) as total_salidas,
+                    COUNT(DISTINCT ra.usuario_id) as empleados_unicos
+                FROM ubicaciones l
+                LEFT JOIN registros_asistencia ra ON l.id = ra.ubicacion_id
+                    AND ra.fecha_local BETWEEN :start_date AND :end_date
+                WHERE l.activa = 1";
+
+        if ($locationId) {
+            $sql .= " AND l.id = :location_id";
+            $params['location_id'] = $locationId;
+        }
+
+        $sql .= " GROUP BY l.id, l.nombre
+                  ORDER BY l.nombre";
+
+        $data = $this->attendanceModel->raw($sql, $params);
+
+        $filters = [
+            'start_date' => $startDate,
+            'end_date' => $endDate
+        ];
+
+        ReportExporter::exportLocationReport($data, $filters, $format);
+    }
+
+    /**
+     * Export incomplete sessions report (missing clock-outs)
+     */
+    private function exportIncompleteSessionsReport($startDate, $endDate, $userId, $locationId, $format) {
+        // Get incomplete sessions data
+        $data = $this->attendanceModel->getIncompleteSessions($startDate, $endDate, $userId, $locationId);
+
+        $filters = [
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'user_id' => $userId,
+            'location_id' => $locationId
+        ];
+
+        ReportExporter::exportIncompleteSessionsReport($data, $filters, $format);
+    }
+
+    /**
+     * Export geofence violations report
+     */
+    private function exportGeofenceViolationsReport($startDate, $endDate, $userId, $locationId, $format) {
+        // Get geofence violations data
+        $data = $this->attendanceModel->getGeofenceViolations($startDate, $endDate, $userId, $locationId);
+
+        $filters = [
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'user_id' => $userId,
+            'location_id' => $locationId
+        ];
+
+        ReportExporter::exportGeofenceViolationsReport($data, $filters, $format);
     }
 }

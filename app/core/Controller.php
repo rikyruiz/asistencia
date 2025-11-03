@@ -72,9 +72,18 @@ abstract class Controller {
      * Return JSON response
      */
     protected function json($data, $statusCode = 200) {
+        // Clean any output buffers to prevent HTML/errors from being sent
+        while (ob_get_level()) {
+            ob_end_clean();
+        }
+
+        // Set headers
         http_response_code($statusCode);
-        header('Content-Type: application/json');
-        echo json_encode($data);
+        header('Content-Type: application/json; charset=utf-8');
+        header('Cache-Control: no-cache, must-revalidate');
+
+        // Output JSON
+        echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         exit();
     }
 
