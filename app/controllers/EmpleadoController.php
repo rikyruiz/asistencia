@@ -98,12 +98,29 @@ class EmpleadoController extends Controller {
             }
 
         $userId = getUserId();
-        $lat = floatval($this->getPost('lat'));
-        $lng = floatval($this->getPost('lng'));
-        $accuracy = floatval($this->getPost('accuracy'));
+        $lat = $this->getPost('lat');
+        $lng = $this->getPost('lng');
+        $accuracy = $this->getPost('accuracy');
 
-            // Validate coordinates
-            if (!$lat || !$lng) {
+            // Validate required fields
+            if ($lat === null || $lat === '' || $lng === null || $lng === '') {
+                logError('Clock in missing coordinates', [
+                    'user_id' => $userId,
+                    'lat' => $lat,
+                    'lng' => $lng,
+                    'post_data' => $_POST
+                ]);
+                $this->json(['error' => 'Faltan datos requeridos (coordenadas)'], 400);
+                return;
+            }
+
+            // Convert to float
+            $lat = floatval($lat);
+            $lng = floatval($lng);
+            $accuracy = floatval($accuracy);
+
+            // Validate coordinate ranges
+            if ($lat < -90 || $lat > 90 || $lng < -180 || $lng > 180) {
                 $this->json(['error' => 'Coordenadas inválidas'], 400);
                 return;
             }

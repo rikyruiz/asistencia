@@ -6,7 +6,7 @@ class User extends Model {
     protected $table = 'usuarios';
     protected $primaryKey = 'id';
     protected $fillable = [
-        'email', 'nombre', 'apellidos', 'pin', 'rol',
+        'username', 'email', 'nombre', 'apellidos', 'pin', 'rol',
         'departamento', 'numero_empleado', 'activo', 'email_verificado',
         'intentos_login', 'bloqueado_hasta', 'ultimo_login',
         'token_verificacion', 'token_recuperacion', 'token_expiracion',

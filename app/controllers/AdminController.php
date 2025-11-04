@@ -8,8 +8,9 @@ class AdminController extends Controller {
     private $attendanceModel;
 
     public function __construct() {
-        // Require admin authentication
-        Middleware::requireAdmin();
+        // Note: We don't enforce admin-only here because some methods allow inspector access
+        // Each method will check permissions individually
+        Middleware::authenticate();
 
         $this->userModel = $this->model('User');
         $this->locationModel = $this->model('Location');
@@ -20,6 +21,8 @@ class AdminController extends Controller {
      * Admin Dashboard
      */
     public function dashboard() {
+        // Only admins can access dashboard
+        Middleware::requireAdmin();
         // Get today's statistics
         $todayStats = $this->attendanceModel->getDailySummary(getCurrentDate());
 
@@ -57,8 +60,11 @@ class AdminController extends Controller {
 
     /**
      * Location Management
+     * Inspectors have read-only access
      */
     public function locations() {
+        // Allow inspectors and admins
+        Middleware::requireViewer();
         $locations = $this->locationModel->all('nombre', 'ASC');
 
         // Get statistics for each location
@@ -80,6 +86,8 @@ class AdminController extends Controller {
      * Create Location Form
      */
     public function createLocation() {
+        // Only admins can create locations
+        Middleware::requireAdmin();
         $data = [
             'title' => 'Nueva Ubicación',
             'csrf_token' => $this->generateCsrfToken()
@@ -92,6 +100,8 @@ class AdminController extends Controller {
      * Store Location
      */
     public function storeLocation() {
+        // Only admins can store locations
+        Middleware::requireAdmin();
         if (!$this->isPost() || !$this->validateCsrfToken()) {
             $this->setFlash('error', 'Token de seguridad inválido', 'error');
             $this->redirect('admin/locations');
@@ -146,6 +156,8 @@ class AdminController extends Controller {
      * Edit Location Form
      */
     public function editLocation($id) {
+        // Only admins can edit locations
+        Middleware::requireAdmin();
         $location = $this->locationModel->find($id);
 
         if (!$location) {
@@ -170,6 +182,8 @@ class AdminController extends Controller {
      * Update Location
      */
     public function updateLocation($id) {
+        // Only admins can update locations
+        Middleware::requireAdmin();
         if (!$this->isPost() || !$this->validateCsrfToken()) {
             $this->setFlash('error', 'Token de seguridad inválido', 'error');
             $this->redirect('admin/locations');
@@ -224,6 +238,8 @@ class AdminController extends Controller {
      * Delete Location
      */
     public function deleteLocation($id) {
+        // Only admins can delete locations
+        Middleware::requireAdmin();
         if (!$this->isPost() || !$this->validateCsrfToken()) {
             $this->json(['error' => 'Token de seguridad inválido'], 403);
         }
@@ -271,8 +287,11 @@ class AdminController extends Controller {
 
     /**
      * User Management
+     * Inspectors have read-only access
      */
     public function users() {
+        // Allow inspectors and admins
+        Middleware::requireViewer();
         // Get filters
         $filters = [
             'role' => $this->getGet('role'),
@@ -310,6 +329,8 @@ class AdminController extends Controller {
      * Create User Form
      */
     public function createUser() {
+        // Only admins can create users
+        Middleware::requireAdmin();
         $allLocations = $this->locationModel->getActiveLocations();
 
         $data = [
@@ -325,6 +346,8 @@ class AdminController extends Controller {
      * Store User
      */
     public function storeUser() {
+        // Only admins can store users
+        Middleware::requireAdmin();
         if (!$this->isPost() || !$this->validateCsrfToken()) {
             $this->setFlash('error', 'Token de seguridad inválido', 'error');
             $this->redirect('admin/users');
@@ -406,6 +429,8 @@ class AdminController extends Controller {
      * Edit User Form
      */
     public function editUser($id) {
+        // Only admins can edit users
+        Middleware::requireAdmin();
         $user = $this->userModel->find($id);
 
         if (!$user) {
@@ -436,6 +461,8 @@ class AdminController extends Controller {
      * Update User
      */
     public function updateUser($id) {
+        // Only admins can update users
+        Middleware::requireAdmin();
         if (!$this->isPost() || !$this->validateCsrfToken()) {
             $this->setFlash('error', 'Token de seguridad inválido', 'error');
             $this->redirect('admin/users');
@@ -530,6 +557,8 @@ class AdminController extends Controller {
      * Delete/Deactivate User
      */
     public function deleteUser($id) {
+        // Only admins can delete users
+        Middleware::requireAdmin();
         if (!$this->isPost() || !$this->validateCsrfToken()) {
             $this->json(['error' => 'Token de seguridad inválido'], 403);
         }
@@ -627,8 +656,11 @@ class AdminController extends Controller {
 
     /**
      * Reports Dashboard
+     * Inspectors have read-only access
      */
     public function reports() {
+        // Allow inspectors and admins
+        Middleware::requireViewer();
         // Get date range from request or default to current month
         $startDate = $this->getGet('start_date', date('Y-m-01'));
         $endDate = $this->getGet('end_date', date('Y-m-d'));
@@ -663,6 +695,9 @@ class AdminController extends Controller {
      * Generate and export report
      */
     public function generateReport() {
+        // Allow inspectors and admins to generate reports
+        Middleware::requireViewer();
+
         $type = $this->getGet('type'); // attendance, summary, location, incomplete, violations
         $format = $this->getGet('format', 'pdf'); // pdf, excel, csv
         $startDate = $this->getGet('start_date', date('Y-m-01'));

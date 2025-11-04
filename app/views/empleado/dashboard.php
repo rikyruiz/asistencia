@@ -1,12 +1,28 @@
 <div class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-    <!-- Welcome Section -->
+    <!-- Welcome Section with Live Clock -->
     <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900">
-            Bienvenido, <?= htmlspecialchars($user['nombre']) ?>
-        </h1>
-        <p class="text-gray-600 mt-1">
-            <?= getDayNameSpanish(getCurrentDate()) ?>, <?= date('d') ?> de <?= getMonthNameSpanish(date('n')) ?> de <?= date('Y') ?>
-        </p>
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">
+                    Bienvenido, <?= htmlspecialchars($user['nombre']) ?>
+                </h1>
+                <p class="text-gray-600 mt-1">
+                    <?= getDayNameSpanish(getCurrentDate()) ?>, <?= date('d') ?> de <?= getMonthNameSpanish(date('n')) ?> de <?= date('Y') ?>
+                </p>
+            </div>
+            <!-- Live Clock -->
+            <div class="mt-4 md:mt-0">
+                <div class="bg-navy text-white rounded-lg px-6 py-4 shadow-lg">
+                    <div class="flex items-center space-x-3">
+                        <i class="fas fa-clock text-gold text-2xl"></i>
+                        <div>
+                            <div class="text-3xl font-bold font-mono" id="live-time"><?= date('H:i:s') ?></div>
+                            <div class="text-xs text-white/70 uppercase tracking-wide">Hora Actual</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Active Session Alert -->
@@ -204,6 +220,23 @@
 </div>
 
 <script>
+// Update live clock
+function updateLiveClock() {
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+
+    const timeElement = document.getElementById('live-time');
+    if (timeElement) {
+        timeElement.textContent = `${hours}:${minutes}:${seconds}`;
+    }
+}
+
+// Update clock every second
+updateLiveClock();
+setInterval(updateLiveClock, 1000);
+
 // Update session timer
 function updateSessionTimer() {
     const timerElement = document.getElementById('session-timer');

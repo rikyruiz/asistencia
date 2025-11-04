@@ -466,4 +466,68 @@ class Attendance extends Model {
 
         return $stats;
     }
+
+    /**
+     * Get count of active work sessions
+     */
+    public function getActiveSessionsCount() {
+        $sql = "SELECT COUNT(*) as count FROM sesiones_trabajo WHERE estado = 'activa'";
+        $result = $this->db->selectOne($sql);
+        return $result ? $result['count'] : 0;
+    }
+
+    /**
+     * Get count of today's attendance records
+     */
+    public function getTodayCount() {
+        $sql = "SELECT COUNT(*) as count FROM registros_asistencia WHERE fecha_local = :date";
+        $result = $this->db->selectOne($sql, ['date' => getCurrentDate()]);
+        return $result ? $result['count'] : 0;
+    }
+
+    /**
+     * Get recent attendance records with employee and location details
+     */
+    public function getRecentWithDetails($limit = 20) {
+        $sql = "SELECT
+                    ra.*,
+                    u.nombre as empleado_nombre,
+                    u.apellidos as empleado_apellidos,
+                    CONCAT(u.nombre, ' ', u.apellidos) as empleado_nombre_completo,
+                    ub.nombre as ubicacion_nombre
+                FROM registros_asistencia ra
+                LEFT JOIN usuarios u ON ra.usuario_id = u.id
+                LEFT JOIN ubicaciones ub ON ra.ubicacion_id = ub.id
+                ORDER BY ra.fecha_hora DESC
+                LIMIT :limit";
+
+        return $this->db->select($sql, ['limit' => $limit]);
+    }
+
+    /**
+     * Get all active work sessions with details
+     */
+    public function getActiveSessions() {
+        $sql = "SELECT
+                    st.*,
+                    u.nombre as empleado_nombre,
+                    u.apellidos as empleado_apellidos,
+                    CONCAT(u.nombre, ' ', u.apellidos) as empleado_nombre_completo,
+                    ub.nombre as ubicacion_nombre,
+                    ra.fecha_hora as entrada,
+                    TIMESTAMPDIFF(HOUR, ra.fecha_hora, NOW()) as horas_trabajadas,
+                    TIMESTAMPDIFF(MINUTE, ra.fecha_hora, NOW()) % 60 as minutos_trabajados,
+                    CONCAT(
+                        TIMESTAMPDIFF(HOUR, ra.fecha_hora, NOW()), 'h ',
+                        TIMESTAMPDIFF(MINUTE, ra.fecha_hora, NOW()) % 60, 'm'
+                    ) as duracion_formateada
+                FROM sesiones_trabajo st
+                LEFT JOIN usuarios u ON st.usuario_id = u.id
+                LEFT JOIN ubicaciones ub ON st.ubicacion_id = ub.id
+                LEFT JOIN registros_asistencia ra ON st.entrada_id = ra.id
+                WHERE st.estado = 'activa'
+                ORDER BY ra.fecha_hora ASC";
+
+        return $this->db->select($sql);
+    }
 }

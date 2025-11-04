@@ -572,7 +572,7 @@ async function processClockIn() {
     btnText.textContent = 'Procesando...';
 
     try {
-        const response = await fetch('<?= url("empleado/clockIn") ?>', {
+        const response = await fetch('<?= url("inspector/clockIn") ?>', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -594,7 +594,7 @@ async function processClockIn() {
 
             // Redirect after 2 seconds
             setTimeout(() => {
-                window.location.href = '<?= url("empleado/dashboard") ?>';
+                window.location.href = '<?= url("inspector/dashboard") ?>';
             }, 2000);
         } else {
             // Show error
@@ -620,7 +620,7 @@ async function processClockOut() {
     btnText.textContent = 'Procesando...';
 
     try {
-        const response = await fetch('<?= url("empleado/clockOut") ?>', {
+        const response = await fetch('<?= url("inspector/clockOut") ?>', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -642,7 +642,7 @@ async function processClockOut() {
 
             // Redirect after 2 seconds
             setTimeout(() => {
-                window.location.href = '<?= url("empleado/dashboard") ?>';
+                window.location.href = '<?= url("inspector/dashboard") ?>';
             }, 2000);
         } else {
             // Show error

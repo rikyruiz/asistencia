@@ -145,9 +145,10 @@ function url($path = '') {
 
 /**
  * Asset URL
+ * Note: Since DocumentRoot is now /public/, assets are served from root
  */
 function asset($path) {
-    return BASE_URL . 'public/' . ltrim($path, '/');
+    return BASE_URL . ltrim($path, '/');
 }
 
 /**

@@ -632,8 +632,20 @@ class ReportExporter {
     }
 
     private static function exportIncompleteSessionsPDF($data, $filters) {
-        $pdf = self::createPDF('P', 'mm', 'A4', true, 'UTF-8');
+        $pdf = new TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
+        $pdf->SetCreator(PDF_CREATOR);
+        $pdf->SetAuthor('Sistema de Asistencia - Alpe Fresh');
         $pdf->SetTitle('Reporte de Salidas Faltantes');
+        $pdf->SetSubject('Reporte de Sesiones Incompletas');
+
+        // Remove default header/footer
+        $pdf->setPrintHeader(false);
+        $pdf->setPrintFooter(false);
+
+        // Set margins
+        $pdf->SetMargins(15, 15, 15);
+        $pdf->SetAutoPageBreak(TRUE, 15);
+
         $pdf->AddPage();
 
         // Title
@@ -803,8 +815,20 @@ class ReportExporter {
     }
 
     private static function exportGeofenceViolationsPDF($data, $filters) {
-        $pdf = self::createPDF('L', 'mm', 'A4', true, 'UTF-8'); // Landscape for more columns
+        $pdf = new TCPDF('L', 'mm', 'A4', true, 'UTF-8', false); // Landscape for more columns
+        $pdf->SetCreator(PDF_CREATOR);
+        $pdf->SetAuthor('Sistema de Asistencia - Alpe Fresh');
         $pdf->SetTitle('Reporte de Violaciones de Geovalla');
+        $pdf->SetSubject('Reporte de Violaciones');
+
+        // Remove default header/footer
+        $pdf->setPrintHeader(false);
+        $pdf->setPrintFooter(false);
+
+        // Set margins
+        $pdf->SetMargins(15, 15, 15);
+        $pdf->SetAutoPageBreak(TRUE, 15);
+
         $pdf->AddPage();
 
         // Title

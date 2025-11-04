@@ -101,6 +101,24 @@
                             </a>
                         <?php endif; ?>
 
+                        <?php if (hasRole('inspector')): ?>
+                            <a href="<?= url('inspector/dashboard') ?>" class="text-white/80 hover:text-white hover:bg-white/10 px-3 py-2 rounded-lg text-sm font-medium transition-colors">
+                                <i class="fas fa-home mr-2"></i>Inicio
+                            </a>
+                            <a href="<?= url('inspector/clock') ?>" class="text-white/80 hover:text-white hover:bg-white/10 px-3 py-2 rounded-lg text-sm font-medium transition-colors">
+                                <i class="fas fa-clock mr-2"></i>Registrar
+                            </a>
+                            <a href="<?= url('admin/users') ?>" class="text-white/80 hover:text-white hover:bg-white/10 px-3 py-2 rounded-lg text-sm font-medium transition-colors">
+                                <i class="fas fa-users mr-2"></i>Usuarios
+                            </a>
+                            <a href="<?= url('admin/locations') ?>" class="text-white/80 hover:text-white hover:bg-white/10 px-3 py-2 rounded-lg text-sm font-medium transition-colors">
+                                <i class="fas fa-map-marker-alt mr-2"></i>Ubicaciones
+                            </a>
+                            <a href="<?= url('admin/reports') ?>" class="text-white/80 hover:text-white hover:bg-white/10 px-3 py-2 rounded-lg text-sm font-medium transition-colors">
+                                <i class="fas fa-file-alt mr-2"></i>Reportes
+                            </a>
+                        <?php endif; ?>
+
                         <?php if (hasAnyRole(['admin', 'superadmin'])): ?>
                             <a href="<?= url('admin/dashboard') ?>" class="text-white/80 hover:text-white hover:bg-white/10 px-3 py-2 rounded-lg text-sm font-medium transition-colors">
                                 <i class="fas fa-chart-line mr-2"></i>Dashboard
@@ -120,14 +138,6 @@
 
                 <!-- Right side -->
                 <div class="flex items-center space-x-4">
-                    <!-- Time display -->
-                    <div class="hidden sm:flex items-center text-white/80 text-sm">
-                        <i class="fas fa-calendar-alt mr-2"></i>
-                        <span id="current-date"><?= formatDate(getCurrentDate()) ?></span>
-                        <span class="mx-2">|</span>
-                        <span id="current-time"><?= date('H:i') ?></span>
-                    </div>
-
                     <!-- User dropdown -->
                     <div class="relative group">
                         <button class="flex items-center space-x-3 text-white hover:text-gold transition-colors">
@@ -235,14 +245,6 @@
 
     <!-- Global JavaScript -->
     <script>
-        // Update time every second
-        function updateTime() {
-            const now = new Date();
-            const time = now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
-            document.getElementById('current-time').textContent = time;
-        }
-        setInterval(updateTime, 1000);
-
         // Toggle mobile menu
         function toggleMobileMenu() {
             const menu = document.getElementById('mobile-menu');
