@@ -1,3 +1,58 @@
+<!-- AGGRESSIVE MODE: Full-page blocking overlay -->
+<div id="location-overlay" class="hidden fixed inset-0 bg-gray-900 bg-opacity-95 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8 text-center">
+        <div class="mb-6">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-red-100 rounded-full mb-4">
+                <i class="fas fa-map-marker-alt text-red-600 text-4xl"></i>
+            </div>
+            <h2 class="text-3xl font-bold text-gray-900 mb-2">
+                Ubicación Requerida
+            </h2>
+            <p class="text-gray-600 text-lg">
+                Debes habilitar tu ubicación para usar el sistema de asistencia
+            </p>
+        </div>
+
+        <div class="bg-red-50 border-2 border-red-200 rounded-xl p-6 mb-6">
+            <div class="flex items-center justify-center mb-4">
+                <div class="animate-pulse flex items-center justify-center w-16 h-16 bg-red-600 rounded-full">
+                    <i class="fas fa-exclamation text-white text-2xl"></i>
+                </div>
+            </div>
+            <p class="text-red-800 font-semibold text-lg mb-2">
+                Sin acceso a ubicación no puedes continuar
+            </p>
+            <p class="text-red-700 text-sm">
+                El sistema intentará solicitar tu ubicación automáticamente cada 15 segundos
+            </p>
+        </div>
+
+        <div class="mb-6">
+            <div class="text-gray-700 mb-4">
+                <p class="font-medium mb-2">Próximo intento en:</p>
+                <div class="text-5xl font-bold text-navy" id="overlay-countdown">15</div>
+                <p class="text-sm text-gray-500 mt-2">segundos</p>
+            </div>
+        </div>
+
+        <button onclick="retryPermission()"
+                class="w-full py-4 px-6 bg-green-600 hover:bg-green-700 text-white font-bold text-lg rounded-xl shadow-lg transform hover:scale-105 transition-all duration-200 mb-4">
+            <i class="fas fa-location-arrow mr-2"></i>
+            Habilitar Ubicación Ahora
+        </button>
+
+        <div id="overlay-instructions" class="text-left bg-gray-50 rounded-xl p-6 border border-gray-200">
+            <p class="text-sm font-semibold text-gray-800 mb-3 flex items-center">
+                <i class="fas fa-info-circle mr-2 text-blue-600"></i>
+                ¿Cómo habilito la ubicación?
+            </p>
+            <div id="overlay-browser-instructions" class="text-sm text-gray-700">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="max-w-4xl mx-auto px-4 py-8">
     <!-- Page Header -->
     <div class="mb-8">
@@ -155,10 +210,20 @@ let map = null;
 let userMarker = null;
 let locationCircles = [];
 
+// AGGRESSIVE MODE: Auto-retry variables
+let retryInterval = null;
+let countdownInterval = null;
+let retrySeconds = 15;
+let locationGranted = false;
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     initializeMap();
     initializeGeolocation();
+    // Show overlay initially until location is granted
+    showLocationOverlay();
+    // Start auto-retry mechanism
+    startAutoRetry();
 });
 
 // Initialize map
@@ -228,6 +293,183 @@ function updateMap(position) {
     }).addTo(map);
 }
 
+// AGGRESSIVE MODE: Show location overlay
+function showLocationOverlay() {
+    const overlay = document.getElementById('location-overlay');
+    overlay.classList.remove('hidden');
+
+    // Populate browser instructions in overlay
+    populateOverlayInstructions();
+
+    // Disable page scrolling
+    document.body.style.overflow = 'hidden';
+}
+
+// AGGRESSIVE MODE: Hide location overlay
+function hideLocationOverlay() {
+    const overlay = document.getElementById('location-overlay');
+    overlay.classList.add('hidden');
+
+    // Re-enable page scrolling
+    document.body.style.overflow = 'auto';
+
+    // Stop auto-retry
+    stopAutoRetry();
+}
+
+// AGGRESSIVE MODE: Populate overlay with browser instructions
+function populateOverlayInstructions() {
+    const instructionsContainer = document.getElementById('overlay-browser-instructions');
+    const userAgent = navigator.userAgent;
+    let instructions = '';
+
+    // Detect browser
+    if (userAgent.includes('Chrome') && !userAgent.includes('Edg')) {
+        instructions = `
+            <div class="flex items-start space-x-2">
+                <i class="fab fa-chrome text-lg mt-0.5"></i>
+                <div>
+                    <p class="font-medium mb-1">Google Chrome:</p>
+                    <ol class="list-decimal list-inside space-y-1 text-xs">
+                        <li>Haz clic en el <strong>ícono de candado</strong> en la barra de direcciones</li>
+                        <li>Busca <strong>"Ubicación"</strong> en los permisos</li>
+                        <li>Selecciona <strong>"Permitir"</strong></li>
+                        <li>Recarga la página (F5)</li>
+                    </ol>
+                </div>
+            </div>
+        `;
+    } else if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) {
+        instructions = `
+            <div class="flex items-start space-x-2">
+                <i class="fab fa-safari text-lg mt-0.5"></i>
+                <div>
+                    <p class="font-medium mb-1">Safari:</p>
+                    <ol class="list-decimal list-inside space-y-1 text-xs">
+                        <li>Ve a <strong>Safari</strong> → <strong>Configuración para este sitio web</strong></li>
+                        <li>En <strong>"Ubicación"</strong> selecciona <strong>"Permitir"</strong></li>
+                        <li>Recarga la página</li>
+                    </ol>
+                </div>
+            </div>
+        `;
+    } else if (userAgent.includes('Firefox')) {
+        instructions = `
+            <div class="flex items-start space-x-2">
+                <i class="fab fa-firefox text-lg mt-0.5"></i>
+                <div>
+                    <p class="font-medium mb-1">Firefox:</p>
+                    <ol class="list-decimal list-inside space-y-1 text-xs">
+                        <li>Haz clic en el <strong>ícono de candado</strong> en la barra de direcciones</li>
+                        <li>Haz clic en la <strong>flecha</strong> junto a "Bloqueado temporalmente"</li>
+                        <li>Selecciona <strong>"Limpiar estos permisos y volver a preguntar"</strong></li>
+                        <li>Recarga la página y permite el acceso</li>
+                    </ol>
+                </div>
+            </div>
+        `;
+    } else if (userAgent.includes('Edg')) {
+        instructions = `
+            <div class="flex items-start space-x-2">
+                <i class="fab fa-edge text-lg mt-0.5"></i>
+                <div>
+                    <p class="font-medium mb-1">Microsoft Edge:</p>
+                    <ol class="list-decimal list-inside space-y-1 text-xs">
+                        <li>Haz clic en el <strong>ícono de candado</strong> en la barra de direcciones</li>
+                        <li>Haz clic en <strong>"Permisos para este sitio"</strong></li>
+                        <li>Busca <strong>"Ubicación"</strong> y selecciona <strong>"Permitir"</strong></li>
+                        <li>Recarga la página (F5)</li>
+                    </ol>
+                </div>
+            </div>
+        `;
+    } else {
+        instructions = `
+            <div>
+                <p class="font-medium mb-1">Pasos generales:</p>
+                <ol class="list-decimal list-inside space-y-1 text-xs">
+                    <li>Busca el ícono de <strong>candado</strong> en la barra de direcciones</li>
+                    <li>Haz clic en él y busca <strong>"Ubicación"</strong></li>
+                    <li>Cambia el permiso a <strong>"Permitir"</strong></li>
+                    <li>Recarga esta página</li>
+                </ol>
+            </div>
+        `;
+    }
+
+    // Add mobile-specific instructions
+    if (/Android|iPhone|iPad|iPod/i.test(userAgent)) {
+        instructions += `
+            <div class="mt-3 pt-3 border-t border-gray-200">
+                <p class="font-medium mb-1 flex items-center">
+                    <i class="fas fa-mobile-alt mr-1"></i> Dispositivo móvil:
+                </p>
+                <ol class="list-decimal list-inside space-y-1 text-xs">
+                    <li>Ve a <strong>Configuración</strong> del dispositivo</li>
+                    <li>Busca <strong>"Privacidad"</strong> o <strong>"Ubicación"</strong></li>
+                    <li>Asegúrate de que la ubicación esté <strong>activada</strong></li>
+                    <li>Permite el acceso para tu navegador</li>
+                </ol>
+            </div>
+        `;
+    }
+
+    instructionsContainer.innerHTML = instructions;
+}
+
+// AGGRESSIVE MODE: Start countdown timer
+function startCountdown() {
+    let seconds = retrySeconds;
+    const countdownEl = document.getElementById('overlay-countdown');
+
+    // Clear any existing countdown
+    if (countdownInterval) {
+        clearInterval(countdownInterval);
+    }
+
+    countdownInterval = setInterval(() => {
+        seconds--;
+        countdownEl.textContent = seconds;
+
+        if (seconds <= 0) {
+            clearInterval(countdownInterval);
+            countdownEl.textContent = retrySeconds;
+        }
+    }, 1000);
+}
+
+// AGGRESSIVE MODE: Start auto-retry mechanism
+function startAutoRetry() {
+    // Clear any existing interval
+    if (retryInterval) {
+        clearInterval(retryInterval);
+    }
+
+    // Start countdown
+    startCountdown();
+
+    // Set up auto-retry every 15 seconds
+    retryInterval = setInterval(() => {
+        if (!locationGranted) {
+            console.log('Auto-retrying location request...');
+            refreshLocation();
+            startCountdown(); // Restart countdown
+        }
+    }, retrySeconds * 1000);
+}
+
+// AGGRESSIVE MODE: Stop auto-retry mechanism
+function stopAutoRetry() {
+    if (retryInterval) {
+        clearInterval(retryInterval);
+        retryInterval = null;
+    }
+    if (countdownInterval) {
+        clearInterval(countdownInterval);
+        countdownInterval = null;
+    }
+}
+
 // Initialize geolocation
 async function initializeGeolocation() {
     geoService = new GeolocationService();
@@ -238,15 +480,8 @@ async function initializeGeolocation() {
     }
 
     try {
-        const permission = await geoService.requestPermission();
-        if (permission === 'denied') {
-            // Show error with instructions
-            showLocationError('Permiso de ubicación denegado', true);
-            return;
-        }
-
-        // If permission is prompt or granted, attempt to get location
-        // This will trigger the browser dialog if needed
+        // AGGRESSIVE MODE: Always attempt to get location regardless of permission state
+        // This will summon the browser's "Allow" prompt
         getCurrentLocation();
 
         // Start watching position
@@ -273,6 +508,13 @@ async function getCurrentLocation() {
 // Handle location update
 function handleLocationUpdate(position) {
     currentPosition = position;
+
+    // AGGRESSIVE MODE: Location was granted successfully!
+    if (!locationGranted) {
+        locationGranted = true;
+        hideLocationOverlay();
+        console.log('Location granted! Hiding overlay and stopping auto-retry.');
+    }
 
     // Update UI
     document.getElementById('gps-status').classList.add('hidden');
@@ -496,25 +738,8 @@ async function retryPermission() {
     document.getElementById('gps-status').classList.remove('hidden');
 
     try {
-        // Check permission status
-        if ('permissions' in navigator) {
-            const permission = await navigator.permissions.query({ name: 'geolocation' });
-
-            if (permission.state === 'denied') {
-                // Still denied, show error immediately
-                setTimeout(() => {
-                    showLocationError('Los permisos aún están bloqueados. Por favor, sigue las instrucciones arriba para habilitarlos.', true);
-                }, 500);
-                return;
-            }
-
-            if (permission.state === 'granted') {
-                // Permission was granted! Get location
-                console.log('Permission granted! Getting location...');
-            }
-        }
-
-        // Attempt to get location (this will show prompt if state is 'prompt')
+        // AGGRESSIVE MODE: Always attempt to get location
+        // Force the browser to show the permission prompt again
         await getCurrentLocation();
 
     } catch (error) {
@@ -536,19 +761,8 @@ async function refreshLocation() {
     document.getElementById('gps-status').classList.remove('hidden');
 
     try {
-        // Check permission status first
-        if ('permissions' in navigator) {
-            const permission = await navigator.permissions.query({ name: 'geolocation' });
-
-            if (permission.state === 'denied') {
-                // Show instructions instead of attempting to get location
-                showLocationError('Permiso de ubicación denegado', true);
-                return;
-            }
-        }
-
-        // If permission is granted or prompt, try to get location
-        // This will trigger the browser's permission dialog if state is 'prompt'
+        // AGGRESSIVE MODE: Always attempt to get location
+        // This will trigger the browser's permission dialog regardless of state
         await getCurrentLocation();
 
     } catch (error) {
